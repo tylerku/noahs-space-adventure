@@ -1,0 +1,2115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Noah's Mars Defense</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; background: #220000; font-family: 'Arial', sans-serif; }
+
+        /* HUD UI */
+        #ui-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        /* Top Bar: Repair Progress */
+        .top-hud { text-align: center; }
+        .repair-label { color: #00ffff; font-size: 20px; font-weight: bold; text-shadow: 2px 2px #000; margin-bottom: 5px; }
+        .progress-container {
+            width: 400px; height: 20px; background: rgba(0,0,0,0.7);
+            border: 2px solid #00ffff; margin: 0 auto; border-radius: 10px; overflow: hidden;
+        }
+        #repair-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #00ffff, #0099ff); transition: width 0.2s; }
+
+        /* Health Status */
+        .status-box { text-align: left; color: white; text-shadow: 2px 2px #000; }
+        .hannah-hp { color: #ff99cc; font-size: 24px; font-weight: bold; }
+
+        /* Controls Helper */
+        .controls { text-align: center; color: #aaa; font-size: 14px; margin-bottom: 10px; }
+        .key { background: #444; color: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #888; }
+
+        /* Game Over / Win Screens */
+        #overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+            text-align: center;
+            color: white;
+        }
+        #overlay h1 { font-size: 60px; margin: 0; }
+        #overlay h2 { color: #aaa; margin-top: 10px; }
+        #restart-btn {
+            margin-top: 20px; padding: 15px 30px; font-size: 20px;
+            background: #00ccff; border: none; border-radius: 5px; cursor: pointer; color: #000; font-weight: bold;
+        }
+        #restart-btn:hover { background: #fff; }
+
+        /* Mission Intro Screen */
+        #mission-intro {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #1a0a0a 0%, #2a1010 50%, #3a1a1a 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .mission-container {
+            text-align: center;
+            animation: fadeInUp 1s ease-out;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .mission-label {
+            font-size: 24px;
+            color: #ff6633;
+            text-transform: uppercase;
+            letter-spacing: 15px;
+            margin-bottom: 20px;
+            animation: glitch 2s infinite;
+            text-shadow: 0 0 10px #ff6633, 0 0 20px #ff4400, 0 0 30px #cc3300;
+        }
+        @keyframes glitch {
+            0%, 90%, 100% { transform: translateX(0); }
+            92% { transform: translateX(-5px); }
+            94% { transform: translateX(5px); }
+            96% { transform: translateX(-3px); }
+            98% { transform: translateX(3px); }
+        }
+        .mission-number {
+            font-size: 120px;
+            font-weight: 900;
+            color: #ff4422;
+            text-shadow: 0 0 20px #ff4422, 0 0 40px #cc3311, 0 0 60px #aa2200;
+            margin: -20px 0;
+            font-family: 'Impact', sans-serif;
+            letter-spacing: -5px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        .mission-title {
+            font-size: 32px;
+            color: #ffddcc;
+            max-width: 600px;
+            line-height: 1.4;
+            margin-top: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+        .mission-title .highlight {
+            color: #ffcc00;
+            font-weight: bold;
+        }
+        .scan-line {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, #ff6633, transparent);
+            animation: scan 3s linear infinite;
+        }
+        @keyframes scan {
+            from { top: 0; }
+            to { top: 100%; }
+        }
+        .corner-decor {
+            position: absolute;
+            width: 60px; height: 60px;
+            border: 3px solid #ff6633;
+        }
+        .corner-decor.tl { top: 30px; left: 30px; border-right: none; border-bottom: none; }
+        .corner-decor.tr { top: 30px; right: 30px; border-left: none; border-bottom: none; }
+        .corner-decor.bl { bottom: 30px; left: 30px; border-right: none; border-top: none; }
+        .corner-decor.br { bottom: 30px; right: 30px; border-left: none; border-top: none; }
+
+        /* Cutscene Screen */
+        #cutscene {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(180deg, #1a0a0a 0%, #2a1515 100%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+        .cutscene-scene {
+            width: 700px;
+            height: 350px;
+            background: linear-gradient(180deg, #3a2020 0%, #5a3030 100%);
+            border-radius: 20px;
+            border: 4px solid #ff6666;
+            box-shadow: 0 0 30px rgba(255,100,100,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        .mars-ground {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 100px;
+            background: linear-gradient(180deg, #8B4513 0%, #A0522D 100%);
+            border-top: 3px solid #CD853F;
+        }
+        /* Character Labels */
+        .character-label {
+            position: absolute;
+            font-size: 14px;
+            font-weight: bold;
+            padding: 4px 12px;
+            border-radius: 12px;
+            white-space: nowrap;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            animation: labelPulse 2s ease-in-out infinite;
+        }
+        @keyframes labelPulse {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.05); }
+        }
+        .hannah-label {
+            background: linear-gradient(135deg, #ff69b4, #ff1493);
+            color: white;
+            top: 20px;
+            left: -60px;
+            transform: none;
+        }
+        .james-label {
+            background: linear-gradient(135deg, #87CEEB, #4169E1);
+            color: white;
+            top: -25px;
+            left: 85px;
+            transform: translateX(-50%);
+            font-size: 12px;
+            padding: 3px 8px;
+        }
+        .cutscene-hannah {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: hannahBounce 1s ease-in-out infinite;
+        }
+        @keyframes hannahBounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-5px); }
+        }
+        .hannah-container {
+            position: relative;
+            width: 120px;
+            height: 140px;
+        }
+        /* Hannah's Body - Pink dress */
+        .hannah-body {
+            width: 50px;
+            height: 60px;
+            background: linear-gradient(180deg, #ff69b4 0%, #ff1493 100%);
+            border-radius: 25px 25px 15px 15px;
+            position: absolute;
+            bottom: 0;
+            left: 20px;
+            box-shadow: inset -5px 0 10px rgba(0,0,0,0.1);
+        }
+        /* Dress details */
+        .hannah-body::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 5px;
+            right: 5px;
+            height: 20px;
+            background: linear-gradient(180deg, transparent, rgba(255,255,255,0.2));
+            border-radius: 0 0 10px 10px;
+        }
+        /* Hannah's Head */
+        .hannah-head {
+            width: 40px;
+            height: 45px;
+            background: #ffdbac;
+            border-radius: 50% 50% 45% 45%;
+            position: absolute;
+            bottom: 55px;
+            left: 25px;
+            box-shadow: inset -3px 0 8px rgba(0,0,0,0.1);
+        }
+        /* Hannah's Hair - Long brown hair */
+        .hannah-hair {
+            position: absolute;
+            bottom: 50px;
+            left: 18px;
+            width: 55px;
+            height: 60px;
+            background: #8B4513;
+            border-radius: 30px 30px 10px 10px;
+            z-index: -1;
+        }
+        /* Hair bangs */
+        .hannah-hair::before {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            width: 45px;
+            height: 20px;
+            background: #8B4513;
+            border-radius: 50% 50% 0 0;
+        }
+        /* Hair sides/pigtails */
+        .hannah-hair-left, .hannah-hair-right {
+            position: absolute;
+            width: 15px;
+            height: 50px;
+            background: #8B4513;
+            border-radius: 10px;
+            bottom: 30px;
+        }
+        .hannah-hair-left {
+            left: 10px;
+        }
+        .hannah-hair-right {
+            left: 65px;
+        }
+        /* Hannah's Face Features */
+        .hannah-face {
+            position: absolute;
+            bottom: 60px;
+            left: 30px;
+            width: 30px;
+            height: 30px;
+        }
+        .hannah-eye {
+            width: 8px;
+            height: 10px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 8px;
+        }
+        .hannah-eye::after {
+            content: '';
+            position: absolute;
+            width: 5px;
+            height: 6px;
+            background: #4a3728;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+        }
+        .hannah-eye.left { left: 3px; }
+        .hannah-eye.right { left: 19px; }
+        /* Eyelashes */
+        .hannah-eye::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: 1px;
+            width: 6px;
+            height: 3px;
+            border-top: 2px solid #333;
+            border-radius: 50% 50% 0 0;
+        }
+        .hannah-smile {
+            position: absolute;
+            top: 22px;
+            left: 8px;
+            width: 14px;
+            height: 7px;
+            border: 2px solid #d47a7a;
+            border-top: none;
+            border-radius: 0 0 14px 14px;
+            background: #ffb6c1;
+        }
+        /* Rosy cheeks */
+        .hannah-cheek {
+            width: 8px;
+            height: 5px;
+            background: rgba(255, 150, 150, 0.5);
+            border-radius: 50%;
+            position: absolute;
+            top: 18px;
+        }
+        .hannah-cheek.left { left: 0; }
+        .hannah-cheek.right { left: 22px; }
+        /* Hannah's Arms */
+        .hannah-arm {
+            width: 12px;
+            height: 35px;
+            background: #ffdbac;
+            border-radius: 6px;
+            position: absolute;
+            bottom: 30px;
+        }
+        .hannah-arm.left {
+            left: 8px;
+            transform: rotate(20deg);
+        }
+        .hannah-arm.right {
+            left: 70px;
+            transform: rotate(-30deg);
+            transform-origin: top center;
+        }
+        /* Pink sleeve cuffs */
+        .hannah-arm::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -2px;
+            width: 16px;
+            height: 10px;
+            background: #ff69b4;
+            border-radius: 8px 8px 0 0;
+        }
+        /* James - Baby boy in blue blanket */
+        .james-bundle {
+            position: absolute;
+            bottom: 25px;
+            left: 65px;
+            width: 45px;
+            height: 40px;
+            background: linear-gradient(135deg, #87CEEB 0%, #6495ED 100%);
+            border-radius: 20px 20px 15px 15px;
+            border: 2px solid #4169E1;
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+        }
+        /* Blanket fold detail */
+        .james-bundle::after {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            right: 5px;
+            height: 8px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 5px;
+        }
+        /* James's Head */
+        .james-head {
+            width: 28px;
+            height: 28px;
+            background: #ffdbac;
+            border-radius: 50%;
+            position: absolute;
+            top: -18px;
+            left: 8px;
+            box-shadow: inset -2px 0 5px rgba(0,0,0,0.1);
+        }
+        /* James's tiny hair tuft */
+        .james-hair {
+            position: absolute;
+            top: -22px;
+            left: 15px;
+            width: 12px;
+            height: 8px;
+            background: #deb887;
+            border-radius: 50% 50% 0 0;
+        }
+        /* James's Face */
+        .james-face {
+            position: absolute;
+            top: -15px;
+            left: 12px;
+            width: 20px;
+            height: 18px;
+        }
+        .james-eye {
+            width: 5px;
+            height: 6px;
+            background: #333;
+            border-radius: 50%;
+            position: absolute;
+            top: 5px;
+        }
+        .james-eye.left { left: 2px; }
+        .james-eye.right { left: 13px; }
+        /* Baby smile */
+        .james-smile {
+            position: absolute;
+            top: 13px;
+            left: 6px;
+            width: 8px;
+            height: 4px;
+            border: 2px solid #d47a7a;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+        }
+        /* Pacifier */
+        .james-pacifier {
+            position: absolute;
+            top: 11px;
+            left: 5px;
+            width: 10px;
+            height: 8px;
+            background: #90EE90;
+            border-radius: 50%;
+            border: 2px solid #32CD32;
+        }
+        .james-pacifier::after {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: 2px;
+            width: 6px;
+            height: 6px;
+            background: #32CD32;
+            border-radius: 50%;
+        }
+        .speech-bubble {
+            position: absolute;
+            bottom: 260px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border-radius: 20px;
+            padding: 20px 30px;
+            max-width: 500px;
+            font-size: 18px;
+            color: #333;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            opacity: 0;
+            animation: bubbleFadeIn 0.5s ease-out 1s forwards;
+        }
+        @keyframes bubbleFadeIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 15px solid transparent;
+            border-top-color: white;
+        }
+        .speech-bubble .noah-name {
+            color: #0066ff;
+            font-weight: bold;
+        }
+        .speech-bubble .mommy-name {
+            color: #ff69b4;
+            font-weight: bold;
+        }
+        .cutscene-stars {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 100px;
+            overflow: hidden;
+        }
+        .star {
+            position: absolute;
+            width: 3px; height: 3px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 1.5s ease-in-out infinite;
+        }
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+        .click-continue {
+            position: absolute;
+            bottom: 50px;
+            color: #aaa;
+            font-size: 16px;
+            animation: blink 1s ease-in-out infinite;
+            opacity: 0;
+            animation: blink 1s ease-in-out infinite 2s;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* Victory Cutscene */
+        #victory-cutscene {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(180deg, #0a0a2a 0%, #1a0a1a 50%, #2a1515 100%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+        }
+        .victory-scene {
+            width: 800px;
+            height: 450px;
+            background: linear-gradient(180deg, #1a0520 0%, #3a2030 50%, #5a3030 100%);
+            border-radius: 20px;
+            border: 4px solid #ffcc00;
+            box-shadow: 0 0 50px rgba(255,200,0,0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        .victory-stars {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 120px;
+            overflow: hidden;
+        }
+        .victory-ground {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 120px;
+            background: linear-gradient(180deg, #8B4513 0%, #A0522D 100%);
+            border-top: 3px solid #CD853F;
+        }
+
+        /* Rocket taking off */
+        .victory-rocket {
+            position: absolute;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: rocketLaunch 4s ease-in forwards;
+        }
+        @keyframes rocketLaunch {
+            0% { bottom: 120px; }
+            20% { bottom: 120px; }
+            100% { bottom: 600px; }
+        }
+        .rocket-body {
+            width: 60px;
+            height: 120px;
+            background: linear-gradient(90deg, #ddd 0%, #fff 50%, #ccc 100%);
+            border-radius: 30px 30px 10px 10px;
+            position: relative;
+        }
+        .rocket-nose {
+            position: absolute;
+            top: -40px;
+            left: 5px;
+            width: 0;
+            height: 0;
+            border-left: 25px solid transparent;
+            border-right: 25px solid transparent;
+            border-bottom: 50px solid #cc0000;
+        }
+        .rocket-nose::after {
+            content: '';
+            position: absolute;
+            top: -15px;
+            left: -8px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 20px solid #666;
+        }
+        .rocket-window {
+            position: absolute;
+            top: 30px;
+            left: 18px;
+            width: 24px;
+            height: 24px;
+            background: radial-gradient(circle at 30% 30%, #87CEEB, #4169E1);
+            border-radius: 50%;
+            border: 3px solid #666;
+        }
+        .rocket-stripe {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 10px;
+            background: #cc0000;
+        }
+        .rocket-stripe.top { top: 20px; }
+        .rocket-stripe.bottom { top: 70px; }
+        .rocket-fin {
+            position: absolute;
+            bottom: -5px;
+            width: 0;
+            height: 0;
+            border-top: 40px solid transparent;
+            border-bottom: 20px solid #cc0000;
+        }
+        .rocket-fin.left {
+            left: -20px;
+            border-right: 25px solid #cc0000;
+        }
+        .rocket-fin.right {
+            right: -20px;
+            border-left: 25px solid #cc0000;
+        }
+
+        /* Rocket flame */
+        .rocket-flame {
+            position: absolute;
+            bottom: -60px;
+            left: 10px;
+            width: 40px;
+            height: 60px;
+            animation: flameFlicker 0.1s ease-in-out infinite;
+        }
+        @keyframes flameFlicker {
+            0%, 100% { transform: scaleY(1) scaleX(1); }
+            50% { transform: scaleY(1.1) scaleX(0.95); }
+        }
+        .flame-outer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 40px;
+            height: 60px;
+            background: linear-gradient(180deg, #ff6600 0%, #ff3300 50%, #ffcc00 100%);
+            border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%;
+            opacity: 0.9;
+        }
+        .flame-inner {
+            position: absolute;
+            bottom: 5px;
+            left: 10px;
+            width: 20px;
+            height: 40px;
+            background: linear-gradient(180deg, #ffff00 0%, #ffcc00 100%);
+            border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%;
+        }
+        .flame-core {
+            position: absolute;
+            bottom: 10px;
+            left: 15px;
+            width: 10px;
+            height: 25px;
+            background: #fff;
+            border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%;
+        }
+
+        /* Smoke clouds */
+        .smoke-cloud {
+            position: absolute;
+            bottom: 120px;
+            border-radius: 50%;
+            background: rgba(200, 200, 200, 0.8);
+            animation: smokeRise 3s ease-out forwards;
+        }
+        @keyframes smokeRise {
+            0% { opacity: 0.8; transform: scale(1) translateY(0); }
+            100% { opacity: 0; transform: scale(3) translateY(-100px); }
+        }
+
+        /* Family on ground watching */
+        .victory-family {
+            position: absolute;
+            bottom: 120px;
+            left: 150px;
+            display: flex;
+            gap: 20px;
+            align-items: flex-end;
+        }
+
+        /* Noah character (hero) */
+        .victory-noah {
+            position: relative;
+            animation: noahCelebrate 0.5s ease-in-out infinite;
+        }
+        @keyframes noahCelebrate {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .noah-body {
+            width: 40px;
+            height: 50px;
+            background: linear-gradient(180deg, #0066ff 0%, #0044cc 100%);
+            border-radius: 20px 20px 10px 10px;
+            position: relative;
+        }
+        .noah-head {
+            width: 35px;
+            height: 35px;
+            background: #ffdbac;
+            border-radius: 50%;
+            position: absolute;
+            top: -30px;
+            left: 2px;
+        }
+        .noah-hair {
+            position: absolute;
+            top: -35px;
+            left: 0;
+            width: 40px;
+            height: 20px;
+            background: #ffdd00;
+            border-radius: 20px 20px 0 0;
+        }
+        .noah-face {
+            position: absolute;
+            top: -25px;
+            left: 8px;
+            width: 25px;
+            height: 20px;
+        }
+        .noah-eye {
+            width: 6px;
+            height: 6px;
+            background: #333;
+            border-radius: 50%;
+            position: absolute;
+            top: 5px;
+        }
+        .noah-eye.left { left: 3px; }
+        .noah-eye.right { left: 16px; }
+        .noah-smile {
+            position: absolute;
+            top: 14px;
+            left: 5px;
+            width: 15px;
+            height: 8px;
+            border: 2px solid #d47a7a;
+            border-top: none;
+            border-radius: 0 0 15px 15px;
+            background: #ffb6c1;
+        }
+        /* Noah's raised arms */
+        .noah-arm-raised {
+            position: absolute;
+            width: 10px;
+            height: 30px;
+            background: #0066ff;
+            border-radius: 5px;
+            top: -15px;
+        }
+        .noah-arm-raised.left {
+            left: -8px;
+            transform: rotate(-45deg);
+        }
+        .noah-arm-raised.right {
+            right: -8px;
+            transform: rotate(45deg);
+        }
+        .noah-hand {
+            position: absolute;
+            bottom: -8px;
+            width: 12px;
+            height: 12px;
+            background: #ffdbac;
+            border-radius: 50%;
+        }
+        .noah-label {
+            background: linear-gradient(135deg, #0066ff, #0044cc);
+        }
+
+        /* Dad character */
+        .victory-dad {
+            position: relative;
+        }
+        .dad-body {
+            width: 45px;
+            height: 70px;
+            background: linear-gradient(180deg, #333 0%, #222 100%);
+            border-radius: 22px 22px 12px 12px;
+            position: relative;
+        }
+        .dad-head {
+            width: 40px;
+            height: 40px;
+            background: #ffcba4;
+            border-radius: 50%;
+            position: absolute;
+            top: -35px;
+            left: 2px;
+        }
+        .dad-hair {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            width: 45px;
+            height: 20px;
+            background: #4a3728;
+            border-radius: 20px 20px 0 0;
+        }
+        .dad-face {
+            position: absolute;
+            top: -28px;
+            left: 10px;
+        }
+        .dad-eye {
+            width: 5px;
+            height: 5px;
+            background: #333;
+            border-radius: 50%;
+            position: absolute;
+            top: 5px;
+        }
+        .dad-eye.left { left: 3px; }
+        .dad-eye.right { left: 18px; }
+        .dad-smile {
+            position: absolute;
+            top: 15px;
+            left: 5px;
+            width: 16px;
+            height: 8px;
+            border: 2px solid #d47a7a;
+            border-top: none;
+            border-radius: 0 0 16px 16px;
+        }
+        .dad-label {
+            background: linear-gradient(135deg, #333, #222);
+        }
+
+        /* Victory Hannah (smaller) */
+        .victory-hannah-small {
+            position: relative;
+            transform: scale(0.7);
+            transform-origin: bottom center;
+        }
+
+        /* Speech bubbles in victory */
+        .victory-bubble {
+            position: absolute;
+            background: white;
+            border-radius: 15px;
+            padding: 12px 18px;
+            font-size: 16px;
+            color: #333;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.3);
+            opacity: 0;
+            max-width: 200px;
+            text-align: center;
+        }
+        .victory-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 12px solid transparent;
+            border-top-color: white;
+        }
+        .bubble-dad {
+            bottom: 220px;
+            left: 100px;
+            animation: bubbleAppear 0.5s ease-out 1s forwards;
+        }
+        .bubble-hannah {
+            bottom: 180px;
+            left: 220px;
+            animation: bubbleAppear 0.5s ease-out 2s forwards;
+        }
+        .bubble-noah {
+            bottom: 200px;
+            left: 50px;
+            animation: bubbleAppear 0.5s ease-out 3s forwards;
+        }
+        @keyframes bubbleAppear {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Victory title */
+        .victory-title {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 48px;
+            font-weight: 900;
+            color: #ffcc00;
+            text-shadow: 0 0 20px #ffcc00, 0 0 40px #ff6600, 3px 3px 0 #cc6600;
+            animation: victoryPulse 1s ease-in-out infinite;
+            letter-spacing: 5px;
+        }
+        @keyframes victoryPulse {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.05); }
+        }
+        .victory-subtitle {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 20px;
+            color: #87CEEB;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            opacity: 0;
+            animation: subtitleAppear 1s ease-out 4s forwards;
+        }
+        @keyframes subtitleAppear {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Play Again button in victory */
+        .victory-btn {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 40px;
+            font-size: 22px;
+            background: linear-gradient(135deg, #00cc66 0%, #009944 100%);
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(0, 200, 100, 0.4);
+            opacity: 0;
+            animation: btnAppear 0.5s ease-out 5s forwards;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .victory-btn:hover {
+            transform: translateX(-50%) scale(1.05);
+            box-shadow: 0 8px 30px rgba(0, 200, 100, 0.6);
+        }
+        @keyframes btnAppear {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        /* Hero label for Noah */
+        .hero-badge {
+            position: absolute;
+            top: -55px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #ffcc00, #ff9900);
+            color: #333;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 10px;
+            white-space: nowrap;
+            animation: badgeGlow 1s ease-in-out infinite;
+        }
+        @keyframes badgeGlow {
+            0%, 100% { box-shadow: 0 0 10px #ffcc00; }
+            50% { box-shadow: 0 0 20px #ffcc00, 0 0 30px #ff9900; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Mission Intro Screen -->
+    <div id="mission-intro">
+        <div class="scan-line"></div>
+        <div class="corner-decor tl"></div>
+        <div class="corner-decor tr"></div>
+        <div class="corner-decor bl"></div>
+        <div class="corner-decor br"></div>
+        <div class="mission-container">
+            <div class="mission-label">INCOMING TRANSMISSION</div>
+            <div class="mission-number">MISSION 1</div>
+            <div class="mission-title">
+                Protect <span class="highlight">Hannah</span> and <span class="highlight">James</span><br>
+                while Dad fixes the ship
+            </div>
+        </div>
+    </div>
+
+    <!-- Cutscene Screen -->
+    <div id="cutscene">
+        <div class="cutscene-scene">
+            <div class="cutscene-stars">
+                <div class="star" style="top: 20px; left: 50px; animation-delay: 0s;"></div>
+                <div class="star" style="top: 60px; left: 150px; animation-delay: 0.3s;"></div>
+                <div class="star" style="top: 30px; left: 300px; animation-delay: 0.6s;"></div>
+                <div class="star" style="top: 80px; left: 400px; animation-delay: 0.2s;"></div>
+                <div class="star" style="top: 40px; left: 550px; animation-delay: 0.8s;"></div>
+                <div class="star" style="top: 100px; left: 620px; animation-delay: 0.4s;"></div>
+                <div class="star" style="top: 15px; left: 680px; animation-delay: 0.1s;"></div>
+                <div class="star" style="top: 90px; left: 100px; animation-delay: 0.5s;"></div>
+                <div class="star" style="top: 50px; left: 480px; animation-delay: 0.7s;"></div>
+            </div>
+            <div class="mars-ground"></div>
+            <div class="cutscene-hannah">
+                <div class="hannah-container">
+                    <!-- Hannah's name label -->
+                    <div class="character-label hannah-label">Hannah</div>
+
+                    <!-- Hannah's Hair -->
+                    <div class="hannah-hair"></div>
+                    <div class="hannah-hair-left"></div>
+                    <div class="hannah-hair-right"></div>
+
+                    <!-- Hannah's Head -->
+                    <div class="hannah-head"></div>
+
+                    <!-- Hannah's Face -->
+                    <div class="hannah-face">
+                        <div class="hannah-eye left"></div>
+                        <div class="hannah-eye right"></div>
+                        <div class="hannah-cheek left"></div>
+                        <div class="hannah-cheek right"></div>
+                        <div class="hannah-smile"></div>
+                    </div>
+
+                    <!-- Hannah's Body (Pink Dress) -->
+                    <div class="hannah-body"></div>
+
+                    <!-- Hannah's Arms -->
+                    <div class="hannah-arm left"></div>
+                    <div class="hannah-arm right"></div>
+
+                    <!-- Baby James in blue blanket -->
+                    <div class="james-bundle">
+                        <div class="character-label james-label">Baby James</div>
+                        <div class="james-hair"></div>
+                        <div class="james-head"></div>
+                        <div class="james-face">
+                            <div class="james-eye left"></div>
+                            <div class="james-eye right"></div>
+                            <div class="james-smile"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="speech-bubble">
+                "You can do it <span class="noah-name">Noah</span>! Protect us so Daddy can fix the ship and we can get back to <span class="mommy-name">Mommy</span>!"
+            </div>
+        </div>
+        <div class="click-continue">Click anywhere to start...</div>
+    </div>
+
+    <div id="ui-layer">
+        <div class="top-hud">
+            <div class="repair-label">ROCKET REPAIR STATUS (Dad is working...)</div>
+            <div class="progress-container"><div id="repair-bar"></div></div>
+        </div>
+
+        <div class="status-box">
+            <div class="hannah-hp">Hannah & James Health: <span id="hp-val">100</span>%</div>
+        </div>
+
+        <div class="controls">
+            <span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span> Move &nbsp;|&nbsp;
+            <span class="key">MOUSE</span> Aim &nbsp;|&nbsp;
+            <span class="key">L-CLICK</span> Blaster &nbsp;|&nbsp;
+            <span class="key">SPACE</span> Sword
+        </div>
+    </div>
+
+    <div id="overlay">
+        <h1 id="ov-title">GAME OVER</h1>
+        <h2 id="ov-desc">Aliens got too close!</h2>
+        <button id="restart-btn" onclick="resetGame()">Try Again</button>
+    </div>
+
+    <!-- Victory Cutscene -->
+    <div id="victory-cutscene">
+        <div class="victory-scene">
+            <!-- Stars background -->
+            <div class="victory-stars">
+                <div class="star" style="top: 30px; left: 80px; animation-delay: 0s;"></div>
+                <div class="star" style="top: 70px; left: 200px; animation-delay: 0.3s;"></div>
+                <div class="star" style="top: 20px; left: 350px; animation-delay: 0.6s;"></div>
+                <div class="star" style="top: 90px; left: 500px; animation-delay: 0.2s;"></div>
+                <div class="star" style="top: 50px; left: 650px; animation-delay: 0.8s;"></div>
+                <div class="star" style="top: 110px; left: 720px; animation-delay: 0.4s;"></div>
+                <div class="star" style="top: 25px; left: 780px; animation-delay: 0.1s;"></div>
+                <div class="star" style="top: 100px; left: 150px; animation-delay: 0.5s;"></div>
+                <div class="star" style="top: 60px; left: 580px; animation-delay: 0.7s;"></div>
+                <div class="star" style="top: 40px; left: 450px; animation-delay: 0.9s;"></div>
+            </div>
+
+            <!-- Mars ground -->
+            <div class="victory-ground"></div>
+
+            <!-- Victory Title -->
+            <div class="victory-title">BLAST OFF!</div>
+            <div class="victory-subtitle">Next Stop: Knoxville, TN to see Mommy!</div>
+
+            <!-- Rocket launching -->
+            <div class="victory-rocket">
+                <div class="rocket-body">
+                    <div class="rocket-nose"></div>
+                    <div class="rocket-window"></div>
+                    <div class="rocket-stripe top"></div>
+                    <div class="rocket-stripe bottom"></div>
+                    <div class="rocket-fin left"></div>
+                    <div class="rocket-fin right"></div>
+                    <div class="rocket-flame">
+                        <div class="flame-outer"></div>
+                        <div class="flame-inner"></div>
+                        <div class="flame-core"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Smoke clouds -->
+            <div class="smoke-cloud" style="left: 380px; width: 40px; height: 40px; animation-delay: 0.8s;"></div>
+            <div class="smoke-cloud" style="left: 420px; width: 50px; height: 50px; animation-delay: 1s;"></div>
+            <div class="smoke-cloud" style="left: 360px; width: 35px; height: 35px; animation-delay: 1.2s;"></div>
+            <div class="smoke-cloud" style="left: 400px; width: 45px; height: 45px; animation-delay: 1.4s;"></div>
+
+            <!-- Family watching -->
+            <div class="victory-family">
+                <!-- Noah (the hero!) -->
+                <div class="victory-noah">
+                    <div class="hero-badge">HERO!</div>
+                    <div class="noah-body">
+                        <div class="noah-hair"></div>
+                        <div class="noah-head"></div>
+                        <div class="noah-face">
+                            <div class="noah-eye left"></div>
+                            <div class="noah-eye right"></div>
+                            <div class="noah-smile"></div>
+                        </div>
+                        <div class="noah-arm-raised left">
+                            <div class="noah-hand"></div>
+                        </div>
+                        <div class="noah-arm-raised right">
+                            <div class="noah-hand"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dad -->
+                <div class="victory-dad">
+                    <div class="dad-body">
+                        <div class="dad-hair"></div>
+                        <div class="dad-head"></div>
+                        <div class="dad-face">
+                            <div class="dad-eye left"></div>
+                            <div class="dad-eye right"></div>
+                            <div class="dad-smile"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hannah holding James (smaller version) -->
+                <div class="victory-hannah-small">
+                    <div class="hannah-container">
+                        <div class="hannah-hair"></div>
+                        <div class="hannah-hair-left"></div>
+                        <div class="hannah-hair-right"></div>
+                        <div class="hannah-head"></div>
+                        <div class="hannah-face">
+                            <div class="hannah-eye left"></div>
+                            <div class="hannah-eye right"></div>
+                            <div class="hannah-cheek left"></div>
+                            <div class="hannah-cheek right"></div>
+                            <div class="hannah-smile"></div>
+                        </div>
+                        <div class="hannah-body"></div>
+                        <div class="hannah-arm left"></div>
+                        <div class="hannah-arm right"></div>
+                        <div class="james-bundle">
+                            <div class="james-hair"></div>
+                            <div class="james-head"></div>
+                            <div class="james-face">
+                                <div class="james-eye left"></div>
+                                <div class="james-eye right"></div>
+                                <div class="james-smile"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Speech bubbles praising Noah -->
+            <div class="victory-bubble bubble-dad">
+                "Great job <span style="color: #0066ff; font-weight: bold;">Noah</span>! You saved us all!"
+            </div>
+            <div class="victory-bubble bubble-hannah">
+                "You're the best big brother ever!"
+            </div>
+            <div class="victory-bubble bubble-noah">
+                "Let's go see <span style="color: #ff69b4; font-weight: bold;">Mommy</span>!"
+            </div>
+        </div>
+
+        <button class="victory-btn" onclick="resetGame()">Play Again</button>
+    </div>
+
+    <script>
+        // --- CONFIG ---
+        let gameState = "intro"; // intro, cutscene, playing, won, lost
+        let repairProgress = 0; // 0 to 100
+        let hannahHealth = 100;
+
+        // Hide UI layer initially
+        document.getElementById('ui-layer').style.opacity = '0';
+
+        // Mission intro auto-advance after 3 seconds
+        setTimeout(() => {
+            if (gameState === "intro") {
+                document.getElementById('mission-intro').style.display = 'none';
+                document.getElementById('cutscene').style.display = 'flex';
+                gameState = "cutscene";
+            }
+        }, 3000);
+
+        // Click handler for intro/cutscene
+        document.addEventListener('click', function(e) {
+            if (gameState === "intro") {
+                document.getElementById('mission-intro').style.display = 'none';
+                document.getElementById('cutscene').style.display = 'flex';
+                gameState = "cutscene";
+            } else if (gameState === "cutscene") {
+                document.getElementById('cutscene').style.display = 'none';
+                document.getElementById('ui-layer').style.opacity = '1';
+                gameState = "playing";
+            }
+        }, { capture: true });
+
+        // --- ENTITIES ---
+        let noah = { x: 0, z: 0, angle: 0, swingTimer: 0 };
+        let bullets = [];
+        let aliens = [];
+        let particles = []; // For explosions/dust
+
+        // --- MARS TERRAIN ---
+        let rocks = [];
+        let craters = [];
+        let dunes = [];
+        let pebbles = [];
+
+        // --- ASSETS (Procedural) ---
+        // We will draw everything with code (Boxes/Spheres)
+
+        function setup() {
+            createCanvas(window.innerWidth, window.innerHeight, WEBGL);
+            noStroke();
+            generateTerrain();
+        }
+
+        function generateTerrain() {
+            // Generate rocks (various sizes scattered around)
+            for (let i = 0; i < 60; i++) {
+                let angle = random(TWO_PI);
+                let dist = random(150, 800);
+                rocks.push({
+                    x: cos(angle) * dist,
+                    z: sin(angle) * dist,
+                    size: random(8, 35),
+                    height: random(10, 40),
+                    rotation: random(TWO_PI),
+                    tilt: random(-0.2, 0.2),
+                    color: random([
+                        [160, 50, 35],
+                        [140, 45, 30],
+                        [180, 65, 45],
+                        [120, 40, 25],
+                        [100, 35, 20]
+                    ])
+                });
+            }
+
+            // Generate craters
+            for (let i = 0; i < 15; i++) {
+                let angle = random(TWO_PI);
+                let dist = random(200, 700);
+                craters.push({
+                    x: cos(angle) * dist,
+                    z: sin(angle) * dist,
+                    radius: random(30, 80),
+                    depth: random(3, 8)
+                });
+            }
+
+            // Generate dunes/hills
+            for (let i = 0; i < 25; i++) {
+                let angle = random(TWO_PI);
+                let dist = random(100, 900);
+                dunes.push({
+                    x: cos(angle) * dist,
+                    z: sin(angle) * dist,
+                    width: random(60, 150),
+                    height: random(5, 20),
+                    length: random(80, 200),
+                    rotation: random(TWO_PI)
+                });
+            }
+
+            // Generate small pebbles for detail
+            for (let i = 0; i < 200; i++) {
+                let angle = random(TWO_PI);
+                let dist = random(50, 900);
+                pebbles.push({
+                    x: cos(angle) * dist,
+                    z: sin(angle) * dist,
+                    size: random(2, 6),
+                    color: random([
+                        [150, 55, 40],
+                        [130, 40, 28],
+                        [170, 60, 42]
+                    ])
+                });
+            }
+        }
+
+        function drawMarsTerrain() {
+            // Base ground plane with gradient effect (multiple layers)
+            push();
+            rotateX(HALF_PI);
+            fill(180, 60, 40); // Mars Red base
+            plane(3000, 3000);
+            pop();
+
+            // Draw darker patches on ground for variety
+            for (let i = 0; i < 8; i++) {
+                push();
+                let px = (i % 4 - 1.5) * 400;
+                let pz = (Math.floor(i / 4) - 0.5) * 400;
+                translate(px, -3, pz);
+                rotateX(HALF_PI);
+                fill(160, 50, 35, 150);
+                ellipse(0, 0, 300, 250);
+                pop();
+            }
+
+            // Draw dunes/hills
+            dunes.forEach(d => {
+                push();
+                translate(d.x, -d.height / 2, d.z);
+                rotateY(d.rotation);
+                fill(190, 70, 50);
+                scale(1, 0.4, 1);
+                sphere(d.width / 2);
+                pop();
+            });
+
+            // Draw craters
+            craters.forEach(c => {
+                push();
+                translate(c.x, 0, c.z);
+
+                // Crater depression (bowl shape using flattened sphere)
+                fill(90, 28, 18);
+                push();
+                translate(0, c.depth, 0);
+                scale(1, 0.15, 1);
+                sphere(c.radius * 0.9);
+                pop();
+
+                // Outer rim (raised edge)
+                fill(170, 55, 38);
+                translate(0, -c.depth - 2, 0);
+                rotateX(HALF_PI);
+                torus(c.radius, c.depth + 2);
+                pop();
+            });
+
+            // Draw rocks
+            rocks.forEach(r => {
+                push();
+                translate(r.x, -r.height / 2, r.z);
+                rotateY(r.rotation);
+                rotateX(r.tilt); // Slight tilt for variety
+                fill(r.color[0], r.color[1], r.color[2]);
+
+                // Make rocks look more natural with stacked shapes
+                // Main body
+                scale(1, r.height / r.size, 1);
+                sphere(r.size);
+
+                // Add a smaller rock on top sometimes
+                if (r.size > 20) {
+                    translate(r.size * 0.3, -r.size * 0.6, 0);
+                    scale(0.5);
+                    fill(r.color[0] - 20, r.color[1] - 10, r.color[2] - 10);
+                    sphere(r.size * 0.6);
+                }
+                pop();
+            });
+
+            // Draw pebbles
+            pebbles.forEach(p => {
+                push();
+                translate(p.x, -p.size / 2, p.z);
+                fill(p.color[0], p.color[1], p.color[2]);
+                sphere(p.size);
+                pop();
+            });
+
+            // Add some dust/sand ripples near the ground
+            for (let i = 0; i < 12; i++) {
+                push();
+                let angle = (i / 12) * TWO_PI;
+                let dist = 200 + (i % 3) * 150;
+                translate(cos(angle) * dist, -4, sin(angle) * dist);
+                rotateX(HALF_PI);
+                rotateZ(angle + HALF_PI);
+                noFill();
+                stroke(200, 80, 55, 100);
+                strokeWeight(2);
+                arc(0, 0, 80, 40, 0, PI);
+                noStroke();
+                pop();
+            }
+        }
+
+        function draw() {
+            // -- LOGIC UPDATE --
+            if (gameState === "playing") {
+                updateGame();
+            }
+
+            // -- RENDER --
+            background(50, 20, 10); // Dark Red Mars Sky
+
+            // Camera Logic: Isometric view following Noah lightly
+            // camera(x, y, z, centerX, centerY, centerZ, upX, upY, upZ)
+            camera(noah.x, -600, noah.z + 500, noah.x, 0, noah.z, 0, 1, 0);
+
+            // Lighting
+            ambientLight(80);
+            directionalLight(255, 200, 150, 0.5, 1, -0.5); // Sun
+            pointLight(0, 255, 255, noah.x, -50, noah.z); // Noah's blaster glow
+
+            // 1. Draw Ground (Mars Surface)
+            drawMarsTerrain();
+
+            // 2. Draw The Rocket Ship (Center)
+            drawRocket();
+
+            // 3. Draw Hannah & James (The Objective)
+            drawHannahAndJames();
+
+            // 4. Draw Dad (NPC)
+            drawDad();
+
+            // 5. Draw Noah (Player)
+            drawNoah();
+
+            // 6. Draw Bullets
+            drawBullets();
+
+            // 7. Draw Aliens
+            drawAliens();
+
+            // 8. Draw Particles
+            drawParticles();
+        }
+
+        function updateGame() {
+            // Repair Progress
+            repairProgress += 0.06; // Slow repair
+            if (repairProgress >= 100) winGame();
+            document.getElementById('repair-bar').style.width = Math.min(repairProgress, 100) + "%";
+
+            // Movement (WASD) - Relative to world (X/Z plane)
+            let speed = 6;
+            if (keyIsDown(87)) noah.z -= speed; // W
+            if (keyIsDown(83)) noah.z += speed; // S
+            if (keyIsDown(65)) noah.x -= speed; // A
+            if (keyIsDown(68)) noah.x += speed; // D
+
+            // Noah Rotation (Look at Mouse)
+            // Need to raycast mouse to ground plane, but simple approximation works for top-down
+            let dx = mouseX - width / 2;
+            let dy = mouseY - height / 2;
+            noah.angle = Math.atan2(dy, dx) + HALF_PI; // Adjust for camera
+
+            // Sword Swing Timer
+            if (noah.swingTimer > 0) noah.swingTimer--;
+
+            // Spawn Aliens
+            if (frameCount % 60 === 0) spawnAlien();
+
+            // Update Bullets
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                bullets[i].x += Math.sin(bullets[i].angle) * 15;
+                bullets[i].z += Math.cos(bullets[i].angle) * 15;
+                bullets[i].life--;
+                if (bullets[i].life <= 0) bullets.splice(i, 1);
+            }
+
+            // Update Aliens
+            for (let i = aliens.length - 1; i >= 0; i--) {
+                let a = aliens[i];
+                // Move toward Center (0,0) where Hannah is
+                let angleToCenter = Math.atan2(-a.x, -a.z); // Target 0,0
+                a.x += Math.sin(angleToCenter) * a.speed;
+                a.z += Math.cos(angleToCenter) * a.speed;
+
+                // Collision: Bullet hits Alien
+                for (let j = bullets.length - 1; j >= 0; j--) {
+                    let b = bullets[j];
+                    if (dist(a.x, a.z, b.x, b.z) < 30) {
+                        createExplosion(a.x, a.z, 'green');
+                        aliens.splice(i, 1);
+                        bullets.splice(j, 1);
+                        return;
+                    }
+                }
+
+                // Collision: Sword hits Alien
+                if (noah.swingTimer > 0 && dist(noah.x, noah.z, a.x, a.z) < 80) {
+                    createExplosion(a.x, a.z, 'orange');
+                    aliens.splice(i, 1);
+                    return;
+                }
+
+                // Collision: Alien Reaches Hannah (Center)
+                if (dist(a.x, a.z, 0, 0) < 60) {
+                    hannahHealth -= 10;
+                    createExplosion(0, 0, 'red');
+                    aliens.splice(i, 1);
+                    document.getElementById('hp-val').innerText = hannahHealth;
+                    if (hannahHealth <= 0) loseGame();
+                }
+            }
+        }
+
+        // --- ACTIONS ---
+        function mousePressed() {
+            if (gameState === 'playing') {
+                // Shoot Blaster
+                bullets.push({
+                    x: noah.x,
+                    z: noah.z,
+                    angle: -noah.angle + PI, // Correct angle for p5 geometry
+                    life: 60
+                });
+            }
+        }
+
+        function keyPressed() {
+            if (key === ' ' && gameState === 'playing') {
+                noah.swingTimer = 15; // Sword active frames
+            }
+        }
+
+        // --- DRAWING HELPERS ---
+
+        function drawNoah() {
+            push();
+            translate(noah.x, -25, noah.z); // Raise slightly so he stands on ground
+            rotateY(-noah.angle + PI); // Face mouse direction
+
+            // Body
+            fill(0, 0, 255); // Blue Shirt
+            box(20, 30, 10);
+
+            // Head (Blonde Boy)
+            push();
+            translate(0, -20, 0);
+            fill(255, 220, 180); // Skin
+            box(14);
+            translate(0, -8, 0);
+            fill(255, 255, 0); // Blonde Hair
+            box(16, 6, 16);
+            pop();
+
+            // Right Arm (Holding Sword)
+            push();
+            translate(12, -5, 10);
+            // Swing animation
+            if (noah.swingTimer > 0) rotateX(map(noah.swingTimer, 0, 15, 0, -2));
+
+            fill(0, 0, 200);
+            box(6, 20, 6); // Arm
+
+            // MINECRAFT SWORD
+            translate(0, 10, 5);
+            rotateX(PI/2);
+            drawMinecraftSword();
+            pop();
+
+            // Left Arm (Holding Blaster)
+            push();
+            translate(-12, -5, 10);
+            rotateX(-1.5); // Aim forward
+            fill(0, 0, 200);
+            box(6, 20, 6); // Arm
+            translate(0, 15, 0);
+            fill(50); // Gun Grey
+            cylinder(3, 15);
+            pop();
+
+            pop();
+        }
+
+        function drawMinecraftSword() {
+            // Pixelated look using small boxes
+            fill(0, 255, 255); // Diamond Blue
+            push();
+            // Blade
+            for(let i=0; i<5; i++) {
+                translate(0, -4, 0);
+                box(4);
+            }
+            // Guard
+            translate(0, 20, 0);
+            fill(100, 50, 0); // Wood handle color
+            box(12, 4, 2);
+            // Handle
+            translate(0, 4, 0);
+            box(4, 8, 2);
+            pop();
+        }
+
+        function drawRocket() {
+            push();
+            translate(0, -150, -80);
+
+            // Main body - white with segments
+            fill(240, 240, 245);
+            cylinder(35, 180);
+
+            // Red stripe bands
+            fill(200, 30, 30);
+            push();
+            translate(0, -60, 0);
+            cylinder(36, 10);
+            pop();
+            push();
+            translate(0, 30, 0);
+            cylinder(36, 10);
+            pop();
+
+            // Upper section (narrower)
+            push();
+            translate(0, -100, 0);
+            fill(240, 240, 245);
+            cylinder(30, 40);
+            pop();
+
+            // Nose cone
+            push();
+            translate(0, -130, 0);
+            fill(200, 30, 30);
+            cone(30, 50);
+            // Tip
+            translate(0, -30, 0);
+            fill(80);
+            cone(8, 20);
+            pop();
+
+            // Window/Porthole
+            push();
+            translate(0, -50, 36);
+            fill(50, 150, 255);
+            sphere(12);
+            // Window frame
+            fill(80);
+            torus(12, 2);
+            pop();
+
+            // Engine section (bottom)
+            push();
+            translate(0, 95, 0);
+            fill(60);
+            cylinder(38, 20);
+
+            // Engine nozzles
+            fill(40);
+            translate(0, 15, 0);
+            // Center nozzle
+            push();
+            cone(15, 25);
+            fill(255, 100, 0, 150);
+            translate(0, 15, 0);
+            cone(12, 20); // Engine glow
+            pop();
+
+            // Side nozzles
+            for (let i = 0; i < 3; i++) {
+                push();
+                rotateY(i * TWO_PI / 3);
+                translate(22, 0, 0);
+                fill(40);
+                cone(8, 18);
+                pop();
+            }
+            pop();
+
+            // Fins (4 fins around the base)
+            for (let i = 0; i < 4; i++) {
+                push();
+                rotateY(i * HALF_PI + QUARTER_PI);
+                translate(35, 70, 0);
+                rotateZ(-0.3);
+                fill(200, 30, 30);
+                // Fin shape using a box (simplified)
+                box(5, 60, 30);
+                // Fin tip
+                translate(0, -35, 0);
+                rotateZ(0.3);
+                box(5, 30, 20);
+                pop();
+            }
+
+            // Landing legs (3 legs)
+            for (let i = 0; i < 3; i++) {
+                push();
+                rotateY(i * TWO_PI / 3);
+                translate(30, 90, 0);
+                rotateZ(-0.5);
+                fill(80);
+                box(6, 50, 6);
+                // Foot pad
+                translate(0, 28, 0);
+                rotateZ(0.5);
+                fill(60);
+                cylinder(10, 4);
+                pop();
+            }
+
+            pop();
+        }
+
+        function drawHannahAndJames() {
+            push();
+            translate(10, -15, 10);
+            // Hannah (Pink)
+            fill(255, 100, 150);
+            box(12, 24, 12);
+            // Head
+            translate(0, -15, 0);
+            fill(255, 220, 180);
+            sphere(6);
+
+            // James (Baby - White bundle held by Hannah)
+            translate(5, 8, 5);
+            fill(255);
+            sphere(5);
+            pop();
+        }
+
+        function drawDad() {
+            push();
+            translate(-40, -25, -60);
+            // Dad fixing animation
+            if (frameCount % 20 < 10) translate(0, -2, 0);
+
+            fill(50, 50, 200); // Dad Clothes
+            box(20, 50, 20);
+            // Head
+            translate(0, -30, 0);
+            fill(255, 200, 150);
+            sphere(10);
+
+            // Text Bubble
+            translate(0, -30, 0);
+            rotateY(PI); // Face camera
+            fill(255);
+            textSize(12);
+            textAlign(CENTER);
+            if (frameCount % 120 < 60) text("Almost fixed!", 0, 0);
+            pop();
+        }
+
+        function drawAliens() {
+            aliens.forEach(a => {
+                push();
+                translate(a.x, 0, a.z);
+
+                // Face toward the rocket (center 0,0)
+                let angleToCenter = Math.atan2(-a.x, -a.z);
+                rotateY(angleToCenter);
+
+                // Walking bounce and cycle
+                let walkCycle = frameCount * 0.15 + (a.walkOffset || 0);
+                let bounce = Math.abs(Math.sin(walkCycle)) * 4;
+                translate(0, -bounce, 0);
+
+                // Slight body sway while walking
+                rotateZ(Math.sin(walkCycle) * 0.08);
+
+                // === LEGS ===
+                let legSwing = Math.sin(walkCycle) * 0.5;
+
+                // Left leg
+                push();
+                translate(-5, -3, 0);
+                rotateX(legSwing);
+                fill(0, 180, 0);
+                // Thigh
+                push();
+                translate(0, 6, 0);
+                box(4, 12, 4);
+                // Shin
+                translate(0, 9, 0);
+                rotateX(-Math.abs(legSwing) * 0.4);
+                fill(0, 160, 0);
+                box(3, 10, 3);
+                // Foot
+                translate(0, 7, 2);
+                fill(0, 140, 0);
+                box(4, 2, 7);
+                pop();
+                pop();
+
+                // Right leg
+                push();
+                translate(5, -3, 0);
+                rotateX(-legSwing);
+                fill(0, 180, 0);
+                push();
+                translate(0, 6, 0);
+                box(4, 12, 4);
+                translate(0, 9, 0);
+                rotateX(-Math.abs(-legSwing) * 0.4);
+                fill(0, 160, 0);
+                box(3, 10, 3);
+                translate(0, 7, 2);
+                fill(0, 140, 0);
+                box(4, 2, 7);
+                pop();
+                pop();
+
+                // === BODY ===
+                push();
+                translate(0, -12, 0);
+                fill(0, 220, 0);
+                scale(1, 1.1, 0.8);
+                sphere(8);
+                pop();
+
+                // === ARMS ===
+                let armSwing = Math.sin(walkCycle + PI) * 0.4;
+
+                // Left arm
+                push();
+                translate(-10, -14, 0);
+                rotateX(armSwing);
+                rotateZ(0.2);
+                fill(0, 180, 0);
+                box(3, 12, 3);
+                // Claw hand
+                translate(0, 8, 0);
+                fill(0, 140, 0);
+                sphere(2.5);
+                // Three fingers
+                for (let f = -1; f <= 1; f++) {
+                    push();
+                    rotateZ(f * 0.3);
+                    translate(0, 3, 0);
+                    box(1, 4, 1);
+                    pop();
+                }
+                pop();
+
+                // Right arm
+                push();
+                translate(10, -14, 0);
+                rotateX(-armSwing);
+                rotateZ(-0.2);
+                fill(0, 180, 0);
+                box(3, 12, 3);
+                translate(0, 8, 0);
+                fill(0, 140, 0);
+                sphere(2.5);
+                for (let f = -1; f <= 1; f++) {
+                    push();
+                    rotateZ(f * 0.3);
+                    translate(0, 3, 0);
+                    box(1, 4, 1);
+                    pop();
+                }
+                pop();
+
+                // === BIG HEAD ===
+                push();
+                translate(0, -32, 0);
+
+                // Neck
+                push();
+                translate(0, 8, 0);
+                fill(0, 180, 0);
+                cylinder(2.5, 6);
+                pop();
+
+                // Main head (oversized!)
+                fill(0, 255, 0);
+                push();
+                scale(1.2, 1, 1);
+                sphere(14);
+                pop();
+
+                // Forehead bulge (big brain!)
+                push();
+                translate(0, -5, 2);
+                fill(0, 240, 0);
+                scale(1, 0.6, 0.7);
+                sphere(12);
+                pop();
+
+                // === EYES (big and creepy) ===
+                push();
+                translate(0, 2, 10);
+
+                // Left eye
+                push();
+                translate(-5, 0, 0);
+                // Eye white/glow
+                fill(200, 255, 200);
+                scale(1.2, 1.4, 0.6);
+                sphere(4);
+                pop();
+                // Left pupil
+                push();
+                translate(-5, 0, 4);
+                fill(0, 0, 0);
+                sphere(2);
+                // Eye shine
+                translate(0.5, -0.5, 1);
+                fill(255);
+                sphere(0.7);
+                pop();
+
+                // Right eye
+                push();
+                translate(5, 0, 0);
+                fill(200, 255, 200);
+                scale(1.2, 1.4, 0.6);
+                sphere(4);
+                pop();
+                push();
+                translate(5, 0, 4);
+                fill(0, 0, 0);
+                sphere(2);
+                translate(-0.5, -0.5, 1);
+                fill(255);
+                sphere(0.7);
+                pop();
+
+                pop(); // End eyes
+
+                // Mouth (sinister grin)
+                push();
+                translate(0, 8, 12);
+                fill(0, 100, 0);
+                scale(1.5, 0.4, 0.3);
+                sphere(4);
+                pop();
+
+                // === ANTENNAS ===
+                // Left antenna
+                push();
+                translate(-6, -12, 0);
+                rotateZ(0.3);
+                rotateX(-0.2);
+                fill(0, 160, 0);
+                cylinder(1, 12);
+                // Glowing tip
+                translate(0, -7, 0);
+                fill(255, 50, 255);
+                sphere(2.5);
+                // Glow effect
+                fill(255, 100, 255, 100);
+                sphere(4);
+                pop();
+
+                // Right antenna
+                push();
+                translate(6, -12, 0);
+                rotateZ(-0.3);
+                rotateX(-0.2);
+                fill(0, 160, 0);
+                cylinder(1, 12);
+                translate(0, -7, 0);
+                fill(255, 50, 255);
+                sphere(2.5);
+                fill(255, 100, 255, 100);
+                sphere(4);
+                pop();
+
+                pop(); // End head
+
+                pop(); // End alien
+            });
+        }
+
+        function drawBullets() {
+            fill(0, 255, 255);
+            bullets.forEach(b => {
+                push();
+                translate(b.x, -30, b.z);
+                sphere(3);
+                pop();
+            });
+        }
+
+        function spawnAlien() {
+            // Spawn at edge of a circle radius 500
+            let angle = random(TWO_PI);
+            let r = 500;
+            aliens.push({
+                x: cos(angle) * r,
+                z: sin(angle) * r,
+                speed: 1.5 + (repairProgress / 50), // Get faster as repair finishes
+                walkOffset: random(TWO_PI) // Random walk cycle offset
+            });
+        }
+
+        function createExplosion(x, z, color) {
+            // Simple particle burst
+            for(let i=0; i<5; i++) {
+                particles.push({
+                    x: x, z: z, y: -20,
+                    vx: random(-2, 2), vy: random(-5, -2), vz: random(-2, 2),
+                    life: 20, color: color
+                });
+            }
+        }
+
+        function drawParticles() {
+            for(let i=particles.length-1; i>=0; i--) {
+                let p = particles[i];
+                push();
+                translate(p.x, p.y, p.z);
+                fill(p.color);
+                box(5);
+                pop();
+                p.x += p.vx;
+                p.y += p.vy;
+                p.z += p.vz;
+                p.life--;
+                if(p.life <= 0) particles.splice(i, 1);
+            }
+        }
+
+        // --- GAME STATES ---
+        function winGame() {
+            gameState = "won";
+            document.getElementById('ui-layer').style.opacity = '0';
+            document.getElementById('victory-cutscene').style.display = 'flex';
+        }
+
+        function loseGame() {
+            gameState = "lost";
+            document.getElementById('overlay').style.display = 'flex';
+            document.getElementById('ov-title').innerText = "GAME OVER";
+            document.getElementById('ov-title').style.color = "red";
+            document.getElementById('ov-desc').innerText = "The aliens captured Hannah and James.";
+        }
+
+        function resetGame() {
+            gameState = "intro";
+            repairProgress = 0;
+            hannahHealth = 100;
+            noah.x = 0; noah.z = 0;
+            aliens = [];
+            bullets = [];
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('victory-cutscene').style.display = 'none';
+            document.getElementById('hp-val').innerText = "100";
+            document.getElementById('ui-layer').style.opacity = '0';
+            document.getElementById('mission-intro').style.display = 'flex';
+            document.getElementById('cutscene').style.display = 'none';
+
+            // Reset victory cutscene animations by removing and re-adding elements
+            const victoryCutscene = document.getElementById('victory-cutscene');
+            const victoryHTML = victoryCutscene.innerHTML;
+            victoryCutscene.innerHTML = victoryHTML;
+
+            // Set up auto-advance timer again
+            setTimeout(() => {
+                if (gameState === "intro") {
+                    document.getElementById('mission-intro').style.display = 'none';
+                    document.getElementById('cutscene').style.display = 'flex';
+                    gameState = "cutscene";
+                }
+            }, 3000);
+        }
+
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+        }
+    </script>
+</body>
+</html>
