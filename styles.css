@@ -1,0 +1,1999 @@
+/* Noah's Space Adventure - Main Styles */
+
+/* Base Styles */
+body {
+    margin: 0;
+    overflow: hidden;
+    background: #220000;
+    font-family: 'Arial', sans-serif;
+}
+
+/* ========== HUD UI ========== */
+#ui-layer {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px;
+    box-sizing: border-box;
+    transition: opacity 0.5s ease-in-out;
+}
+
+/* Mission 3 Menu Button */
+.m3-menu-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: rgba(60, 60, 60, 0.9);
+    border: 2px solid #00ffff;
+    border-radius: 10px;
+    padding: 10px 18px;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    pointer-events: auto;
+    transition: all 0.2s;
+    z-index: 10;
+}
+.m3-menu-btn:hover {
+    background: rgba(100, 100, 100, 0.95);
+    border-color: #66ffff;
+}
+
+/* Top Bar: Repair Progress */
+.top-hud { text-align: center; }
+.repair-label {
+    color: #00ffff;
+    font-size: 20px;
+    font-weight: bold;
+    text-shadow: 2px 2px #000;
+    margin-bottom: 5px;
+}
+.progress-container {
+    width: 400px;
+    height: 20px;
+    background: rgba(0,0,0,0.7);
+    border: 2px solid #00ffff;
+    margin: 0 auto;
+    border-radius: 10px;
+    overflow: hidden;
+}
+#repair-bar {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #00ffff, #0099ff);
+    transition: width 0.2s;
+}
+
+/* Health Status */
+.status-box {
+    text-align: left;
+    color: white;
+    text-shadow: 2px 2px #000;
+}
+.hannah-hp {
+    color: #ff99cc;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+/* Controls Helper */
+.controls {
+    text-align: center;
+    color: #aaa;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+.key {
+    background: #444;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid #888;
+}
+
+/* ========== GAME OVER / WIN SCREENS ========== */
+#overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+    text-align: center;
+    color: white;
+}
+#overlay h1 { font-size: 60px; margin: 0; }
+#overlay h2 { color: #aaa; margin-top: 10px; }
+#restart-btn {
+    margin-top: 20px;
+    padding: 15px 30px;
+    font-size: 20px;
+    background: #00ccff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    color: #000;
+    font-weight: bold;
+}
+#restart-btn:hover { background: #fff; }
+
+/* ========== MISSION INTRO SCREEN ========== */
+#mission-intro {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(135deg, #1a0a0a 0%, #2a1010 50%, #3a1a1a 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+.mission-container {
+    text-align: center;
+    animation: fadeInUp 1s ease-out;
+}
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(50px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.mission-label {
+    font-size: 24px;
+    color: #ff6633;
+    text-transform: uppercase;
+    letter-spacing: 15px;
+    margin-bottom: 20px;
+    animation: glitch 2s infinite;
+    text-shadow: 0 0 10px #ff6633, 0 0 20px #ff4400, 0 0 30px #cc3300;
+}
+@keyframes glitch {
+    0%, 90%, 100% { transform: translateX(0); }
+    92% { transform: translateX(-5px); }
+    94% { transform: translateX(5px); }
+    96% { transform: translateX(-3px); }
+    98% { transform: translateX(3px); }
+}
+.mission-number {
+    font-size: 120px;
+    font-weight: 900;
+    color: #ff4422;
+    text-shadow: 0 0 20px #ff4422, 0 0 40px #cc3311, 0 0 60px #aa2200;
+    margin: -20px 0;
+    font-family: 'Impact', sans-serif;
+    letter-spacing: -5px;
+    animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+}
+.mission-title {
+    font-size: 32px;
+    color: #ffddcc;
+    max-width: 600px;
+    line-height: 1.4;
+    margin-top: 20px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+}
+.mission-title .highlight {
+    color: #ffcc00;
+    font-weight: bold;
+}
+.scan-line {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, #ff6633, transparent);
+    animation: scan 3s linear infinite;
+}
+@keyframes scan {
+    from { top: 0; }
+    to { top: 100%; }
+}
+.corner-decor {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    border: 3px solid #ff6633;
+}
+.corner-decor.tl { top: 30px; left: 30px; border-right: none; border-bottom: none; }
+.corner-decor.tr { top: 30px; right: 30px; border-left: none; border-bottom: none; }
+.corner-decor.bl { bottom: 30px; left: 30px; border-right: none; border-top: none; }
+.corner-decor.br { bottom: 30px; right: 30px; border-left: none; border-top: none; }
+
+/* ========== CUTSCENE SCREEN ========== */
+#cutscene {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: transparent;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding-bottom: 80px;
+    z-index: 999;
+    pointer-events: auto;
+}
+.cutscene-scene { display: none; }
+.mars-ground { display: none; }
+
+/* Character Labels */
+.character-label {
+    position: absolute;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 4px 12px;
+    border-radius: 12px;
+    white-space: nowrap;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    animation: labelPulse 2s ease-in-out infinite;
+}
+@keyframes labelPulse {
+    0%, 100% { transform: translateX(-50%) scale(1); }
+    50% { transform: translateX(-50%) scale(1.05); }
+}
+.hannah-label {
+    background: linear-gradient(135deg, #ff69b4, #ff1493);
+    color: white;
+    top: 20px;
+    left: -60px;
+    transform: none;
+}
+.james-label {
+    background: linear-gradient(135deg, #87CEEB, #4169E1);
+    color: white;
+    top: -25px;
+    left: 85px;
+    transform: translateX(-50%);
+    font-size: 12px;
+    padding: 3px 8px;
+}
+
+/* ========== CUTSCENE HANNAH ========== */
+.cutscene-hannah {
+    position: absolute;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    animation: hannahBounce 1s ease-in-out infinite;
+}
+@keyframes hannahBounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-5px); }
+}
+.hannah-container {
+    position: relative;
+    width: 120px;
+    height: 140px;
+}
+
+/* Hannah's Body - Pink dress */
+.hannah-body {
+    width: 50px;
+    height: 60px;
+    background: linear-gradient(180deg, #ff69b4 0%, #ff1493 100%);
+    border-radius: 25px 25px 15px 15px;
+    position: absolute;
+    bottom: 0;
+    left: 20px;
+    box-shadow: inset -5px 0 10px rgba(0,0,0,0.1);
+}
+.hannah-body::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 5px;
+    right: 5px;
+    height: 20px;
+    background: linear-gradient(180deg, transparent, rgba(255,255,255,0.2));
+    border-radius: 0 0 10px 10px;
+}
+
+/* Hannah's Head */
+.hannah-head {
+    width: 40px;
+    height: 45px;
+    background: #ffdbac;
+    border-radius: 50% 50% 45% 45%;
+    position: absolute;
+    bottom: 55px;
+    left: 25px;
+    box-shadow: inset -3px 0 8px rgba(0,0,0,0.1);
+}
+
+/* Hannah's Hair */
+.hannah-hair {
+    position: absolute;
+    bottom: 50px;
+    left: 18px;
+    width: 55px;
+    height: 60px;
+    background: #8B4513;
+    border-radius: 30px 30px 10px 10px;
+    z-index: -1;
+}
+.hannah-hair::before {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 45px;
+    height: 20px;
+    background: #8B4513;
+    border-radius: 50% 50% 0 0;
+}
+.hannah-hair-left, .hannah-hair-right {
+    position: absolute;
+    width: 15px;
+    height: 50px;
+    background: #8B4513;
+    border-radius: 10px;
+    bottom: 30px;
+}
+.hannah-hair-left { left: 10px; }
+.hannah-hair-right { left: 65px; }
+
+/* Hannah's Face Features */
+.hannah-face {
+    position: absolute;
+    bottom: 60px;
+    left: 30px;
+    width: 30px;
+    height: 30px;
+}
+.hannah-eye {
+    width: 8px;
+    height: 10px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 8px;
+}
+.hannah-eye::after {
+    content: '';
+    position: absolute;
+    width: 5px;
+    height: 6px;
+    background: #4a3728;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+}
+.hannah-eye.left { left: 3px; }
+.hannah-eye.right { left: 19px; }
+.hannah-eye::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: 1px;
+    width: 6px;
+    height: 3px;
+    border-top: 2px solid #333;
+    border-radius: 50% 50% 0 0;
+}
+.hannah-smile {
+    position: absolute;
+    top: 22px;
+    left: 8px;
+    width: 14px;
+    height: 7px;
+    border: 2px solid #d47a7a;
+    border-top: none;
+    border-radius: 0 0 14px 14px;
+    background: #ffb6c1;
+}
+.hannah-cheek {
+    width: 8px;
+    height: 5px;
+    background: rgba(255, 150, 150, 0.5);
+    border-radius: 50%;
+    position: absolute;
+    top: 18px;
+}
+.hannah-cheek.left { left: 0; }
+.hannah-cheek.right { left: 22px; }
+
+/* Hannah's Arms */
+.hannah-arm {
+    width: 12px;
+    height: 35px;
+    background: #ffdbac;
+    border-radius: 6px;
+    position: absolute;
+    bottom: 30px;
+}
+.hannah-arm.left {
+    left: 8px;
+    transform: rotate(20deg);
+}
+.hannah-arm.right {
+    left: 70px;
+    transform: rotate(-30deg);
+    transform-origin: top center;
+}
+.hannah-arm::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -2px;
+    width: 16px;
+    height: 10px;
+    background: #ff69b4;
+    border-radius: 8px 8px 0 0;
+}
+
+/* ========== JAMES (BABY) ========== */
+.james-bundle {
+    position: absolute;
+    bottom: 25px;
+    left: 65px;
+    width: 45px;
+    height: 40px;
+    background: linear-gradient(135deg, #87CEEB 0%, #6495ED 100%);
+    border-radius: 20px 20px 15px 15px;
+    border: 2px solid #4169E1;
+    box-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+}
+.james-bundle::after {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    right: 5px;
+    height: 8px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 5px;
+}
+.james-head {
+    width: 28px;
+    height: 28px;
+    background: #ffdbac;
+    border-radius: 50%;
+    position: absolute;
+    top: -18px;
+    left: 8px;
+    box-shadow: inset -2px 0 5px rgba(0,0,0,0.1);
+}
+.james-hair {
+    position: absolute;
+    top: -22px;
+    left: 15px;
+    width: 12px;
+    height: 8px;
+    background: #deb887;
+    border-radius: 50% 50% 0 0;
+}
+.james-face {
+    position: absolute;
+    top: -15px;
+    left: 12px;
+    width: 20px;
+    height: 18px;
+}
+.james-eye {
+    width: 5px;
+    height: 6px;
+    background: #333;
+    border-radius: 50%;
+    position: absolute;
+    top: 5px;
+}
+.james-eye.left { left: 2px; }
+.james-eye.right { left: 13px; }
+.james-smile {
+    position: absolute;
+    top: 13px;
+    left: 6px;
+    width: 8px;
+    height: 4px;
+    border: 2px solid #d47a7a;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+}
+.james-pacifier {
+    position: absolute;
+    top: 11px;
+    left: 5px;
+    width: 10px;
+    height: 8px;
+    background: #90EE90;
+    border-radius: 50%;
+    border: 2px solid #32CD32;
+}
+.james-pacifier::after {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: 2px;
+    width: 6px;
+    height: 6px;
+    background: #32CD32;
+    border-radius: 50%;
+}
+
+/* ========== SPEECH BUBBLE ========== */
+.speech-bubble {
+    position: fixed;
+    bottom: 150px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 20px 30px;
+    max-width: 500px;
+    font-size: 18px;
+    color: #333;
+    text-align: center;
+    box-shadow: 0 5px 30px rgba(0,0,0,0.5);
+    opacity: 0;
+    animation: bubbleFadeIn 0.5s ease-out 0.5s forwards;
+    z-index: 1000;
+}
+@keyframes bubbleFadeIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+.speech-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 15px solid transparent;
+    border-top-color: white;
+}
+.speech-bubble .noah-name {
+    color: #0066ff;
+    font-weight: bold;
+}
+.speech-bubble .mommy-name {
+    color: #ff69b4;
+    font-weight: bold;
+}
+
+/* Stars and Continue Prompt */
+.cutscene-stars {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 100px;
+    overflow: hidden;
+}
+.star {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle 1.5s ease-in-out infinite;
+}
+@keyframes twinkle {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+}
+.click-continue {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #fff;
+    font-size: 18px;
+    text-shadow: 0 0 10px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.5);
+    background: rgba(0,0,0,0.4);
+    padding: 10px 25px;
+    border-radius: 20px;
+    opacity: 0;
+    animation: blink 1s ease-in-out infinite 1.5s;
+    z-index: 1001;
+}
+@keyframes blink {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+/* ========== VICTORY CUTSCENE ========== */
+#victory-cutscene {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(180deg, #0a0a2a 0%, #1a0a1a 50%, #2a1515 100%);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1001;
+}
+.victory-scene {
+    width: 800px;
+    height: 450px;
+    background: linear-gradient(180deg, #1a0520 0%, #3a2030 50%, #5a3030 100%);
+    border-radius: 20px;
+    border: 4px solid #ffcc00;
+    box-shadow: 0 0 50px rgba(255,200,0,0.4);
+    position: relative;
+    overflow: hidden;
+}
+.victory-stars {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 120px;
+    overflow: hidden;
+}
+.victory-ground {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 120px;
+    background: linear-gradient(180deg, #8B4513 0%, #A0522D 100%);
+    border-top: 3px solid #CD853F;
+}
+
+/* Victory Rocket */
+.victory-rocket {
+    position: absolute;
+    bottom: 120px;
+    left: 50%;
+    transform: translateX(-50%);
+    animation: rocketLaunch 4s ease-in forwards;
+}
+@keyframes rocketLaunch {
+    0% { bottom: 120px; }
+    20% { bottom: 120px; }
+    100% { bottom: 600px; }
+}
+.rocket-body {
+    width: 60px;
+    height: 120px;
+    background: linear-gradient(90deg, #ddd 0%, #fff 50%, #ccc 100%);
+    border-radius: 30px 30px 10px 10px;
+    position: relative;
+}
+.rocket-nose {
+    position: absolute;
+    top: -40px;
+    left: 5px;
+    width: 0;
+    height: 0;
+    border-left: 25px solid transparent;
+    border-right: 25px solid transparent;
+    border-bottom: 50px solid #cc0000;
+}
+.rocket-nose::after {
+    content: '';
+    position: absolute;
+    top: -15px;
+    left: -8px;
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 20px solid #666;
+}
+.rocket-window {
+    position: absolute;
+    top: 30px;
+    left: 18px;
+    width: 24px;
+    height: 24px;
+    background: radial-gradient(circle at 30% 30%, #87CEEB, #4169E1);
+    border-radius: 50%;
+    border: 3px solid #666;
+}
+.rocket-stripe {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 10px;
+    background: #cc0000;
+}
+.rocket-stripe.top { top: 20px; }
+.rocket-stripe.bottom { top: 70px; }
+.rocket-fin {
+    position: absolute;
+    bottom: -5px;
+    width: 0;
+    height: 0;
+    border-top: 40px solid transparent;
+    border-bottom: 20px solid #cc0000;
+}
+.rocket-fin.left {
+    left: -20px;
+    border-right: 25px solid #cc0000;
+}
+.rocket-fin.right {
+    right: -20px;
+    border-left: 25px solid #cc0000;
+}
+
+/* Rocket Flame */
+.rocket-flame {
+    position: absolute;
+    bottom: -60px;
+    left: 10px;
+    width: 40px;
+    height: 60px;
+    animation: flameFlicker 0.1s ease-in-out infinite;
+}
+@keyframes flameFlicker {
+    0%, 100% { transform: scaleY(1) scaleX(1); }
+    50% { transform: scaleY(1.1) scaleX(0.95); }
+}
+.flame-outer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 60px;
+    background: linear-gradient(180deg, #ff6600 0%, #ff3300 50%, #ffcc00 100%);
+    border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%;
+    opacity: 0.9;
+}
+.flame-inner {
+    position: absolute;
+    bottom: 5px;
+    left: 10px;
+    width: 20px;
+    height: 40px;
+    background: linear-gradient(180deg, #ffff00 0%, #ffcc00 100%);
+    border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%;
+}
+.flame-core {
+    position: absolute;
+    bottom: 10px;
+    left: 15px;
+    width: 10px;
+    height: 25px;
+    background: #fff;
+    border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%;
+}
+
+/* Smoke Clouds */
+.smoke-cloud {
+    position: absolute;
+    bottom: 120px;
+    border-radius: 50%;
+    background: rgba(200, 200, 200, 0.8);
+    animation: smokeRise 3s ease-out forwards;
+}
+@keyframes smokeRise {
+    0% { opacity: 0.8; transform: scale(1) translateY(0); }
+    100% { opacity: 0; transform: scale(3) translateY(-100px); }
+}
+
+/* Victory Family */
+.victory-family {
+    position: absolute;
+    bottom: 120px;
+    left: 150px;
+    display: flex;
+    gap: 20px;
+    align-items: flex-end;
+}
+
+/* Victory Noah */
+.victory-noah {
+    position: relative;
+    animation: noahCelebrate 0.5s ease-in-out infinite;
+}
+@keyframes noahCelebrate {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+.noah-body {
+    width: 40px;
+    height: 50px;
+    background: linear-gradient(180deg, #0066ff 0%, #0044cc 100%);
+    border-radius: 20px 20px 10px 10px;
+    position: relative;
+}
+.noah-head {
+    width: 35px;
+    height: 35px;
+    background: #ffdbac;
+    border-radius: 50%;
+    position: absolute;
+    top: -30px;
+    left: 2px;
+}
+.noah-hair {
+    position: absolute;
+    top: -35px;
+    left: 0;
+    width: 40px;
+    height: 20px;
+    background: #ffdd00;
+    border-radius: 20px 20px 0 0;
+}
+.noah-face {
+    position: absolute;
+    top: -25px;
+    left: 8px;
+    width: 25px;
+    height: 20px;
+}
+.noah-eye {
+    width: 6px;
+    height: 6px;
+    background: #333;
+    border-radius: 50%;
+    position: absolute;
+    top: 5px;
+}
+.noah-eye.left { left: 3px; }
+.noah-eye.right { left: 16px; }
+.noah-smile {
+    position: absolute;
+    top: 14px;
+    left: 5px;
+    width: 15px;
+    height: 8px;
+    border: 2px solid #d47a7a;
+    border-top: none;
+    border-radius: 0 0 15px 15px;
+    background: #ffb6c1;
+}
+.noah-arm-raised {
+    position: absolute;
+    width: 10px;
+    height: 30px;
+    background: #0066ff;
+    border-radius: 5px;
+    top: -15px;
+}
+.noah-arm-raised.left {
+    left: -8px;
+    transform: rotate(-45deg);
+}
+.noah-arm-raised.right {
+    right: -8px;
+    transform: rotate(45deg);
+}
+.noah-hand {
+    position: absolute;
+    bottom: -8px;
+    width: 12px;
+    height: 12px;
+    background: #ffdbac;
+    border-radius: 50%;
+}
+.noah-label {
+    background: linear-gradient(135deg, #0066ff, #0044cc);
+}
+
+/* Victory Dad */
+.victory-dad {
+    position: relative;
+}
+.dad-body {
+    width: 45px;
+    height: 70px;
+    background: linear-gradient(180deg, #333 0%, #222 100%);
+    border-radius: 22px 22px 12px 12px;
+    position: relative;
+}
+.dad-head {
+    width: 40px;
+    height: 40px;
+    background: #ffcba4;
+    border-radius: 50%;
+    position: absolute;
+    top: -35px;
+    left: 2px;
+}
+.dad-hair {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    width: 45px;
+    height: 20px;
+    background: #4a3728;
+    border-radius: 20px 20px 0 0;
+}
+.dad-face {
+    position: absolute;
+    top: -28px;
+    left: 10px;
+}
+.dad-eye {
+    width: 5px;
+    height: 5px;
+    background: #333;
+    border-radius: 50%;
+    position: absolute;
+    top: 5px;
+}
+.dad-eye.left { left: 3px; }
+.dad-eye.right { left: 18px; }
+.dad-smile {
+    position: absolute;
+    top: 15px;
+    left: 5px;
+    width: 16px;
+    height: 8px;
+    border: 2px solid #d47a7a;
+    border-top: none;
+    border-radius: 0 0 16px 16px;
+}
+.dad-label {
+    background: linear-gradient(135deg, #333, #222);
+}
+
+/* Victory Hannah Small */
+.victory-hannah-small {
+    position: relative;
+    transform: scale(0.7);
+    transform-origin: bottom center;
+}
+
+/* Victory Speech Bubbles */
+.victory-bubble {
+    position: absolute;
+    background: white;
+    border-radius: 15px;
+    padding: 12px 18px;
+    font-size: 16px;
+    color: #333;
+    box-shadow: 0 3px 15px rgba(0,0,0,0.3);
+    opacity: 0;
+    max-width: 200px;
+    text-align: center;
+}
+.victory-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 12px solid transparent;
+    border-top-color: white;
+}
+.bubble-dad {
+    bottom: 220px;
+    left: 100px;
+    animation: bubbleAppear 0.5s ease-out 1s forwards;
+}
+.bubble-hannah {
+    bottom: 180px;
+    left: 220px;
+    animation: bubbleAppear 0.5s ease-out 2s forwards;
+}
+.bubble-noah {
+    bottom: 200px;
+    left: 50px;
+    animation: bubbleAppear 0.5s ease-out 3s forwards;
+}
+@keyframes bubbleAppear {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Victory Title */
+.victory-title {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 48px;
+    font-weight: 900;
+    color: #ffcc00;
+    text-shadow: 0 0 20px #ffcc00, 0 0 40px #ff6600, 3px 3px 0 #cc6600;
+    animation: victoryPulse 1s ease-in-out infinite;
+    letter-spacing: 5px;
+}
+@keyframes victoryPulse {
+    0%, 100% { transform: translateX(-50%) scale(1); }
+    50% { transform: translateX(-50%) scale(1.05); }
+}
+.victory-subtitle {
+    position: absolute;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 20px;
+    color: #87CEEB;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    opacity: 0;
+    animation: subtitleAppear 1s ease-out 4s forwards;
+}
+@keyframes subtitleAppear {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Victory Button */
+.victory-btn {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 15px 40px;
+    font-size: 22px;
+    background: linear-gradient(135deg, #00cc66 0%, #009944 100%);
+    border: none;
+    border-radius: 30px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 5px 20px rgba(0, 200, 100, 0.4);
+    opacity: 0;
+    animation: btnAppear 0.5s ease-out 5s forwards;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.victory-btn:hover {
+    transform: translateX(-50%) scale(1.05);
+    box-shadow: 0 8px 30px rgba(0, 200, 100, 0.6);
+}
+@keyframes btnAppear {
+    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Hero Badge */
+.hero-badge {
+    position: absolute;
+    top: -55px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #ffcc00, #ff9900);
+    color: #333;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 4px 10px;
+    border-radius: 10px;
+    white-space: nowrap;
+    animation: badgeGlow 1s ease-in-out infinite;
+}
+@keyframes badgeGlow {
+    0%, 100% { box-shadow: 0 0 10px #ffcc00; }
+    50% { box-shadow: 0 0 20px #ffcc00, 0 0 30px #ff9900; }
+}
+
+/* ========== MAIN MENU ========== */
+#main-menu {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(180deg, #0a0a1a 0%, #1a1a3a 50%, #0a0a2a 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1100;
+}
+.menu-stars {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+.menu-star {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle 2s ease-in-out infinite;
+}
+.game-title {
+    font-size: 72px;
+    font-weight: 900;
+    color: #ffcc00;
+    text-shadow: 0 0 20px #ffcc00, 0 0 40px #ff9900, 4px 4px 0 #cc6600;
+    margin-bottom: 10px;
+    text-align: center;
+    animation: titleFloat 3s ease-in-out infinite;
+}
+@keyframes titleFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+.game-subtitle {
+    font-size: 24px;
+    color: #87CEEB;
+    margin-bottom: 40px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+}
+.missions-container {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 900px;
+    padding: 20px;
+}
+.mission-card {
+    width: 150px;
+    height: 200px;
+    background: linear-gradient(180deg, #2a2a4a 0%, #1a1a3a 100%);
+    border-radius: 15px;
+    border: 3px solid #444;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+.mission-card:hover:not(.locked) {
+    transform: translateY(-10px);
+    border-color: #ffcc00;
+    box-shadow: 0 10px 30px rgba(255, 200, 0, 0.3);
+}
+.mission-card.locked {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+.mission-card.locked::after {
+    content: '\1F512';
+    position: absolute;
+    font-size: 40px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+.mission-card.completed {
+    border-color: #00cc66;
+}
+.mission-card.completed::before {
+    content: '\2713';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    color: #00cc66;
+    font-weight: bold;
+}
+.mission-card-number {
+    font-size: 48px;
+    font-weight: 900;
+    color: #666;
+    margin-bottom: 5px;
+}
+.mission-card:not(.locked) .mission-card-number {
+    color: #ffcc00;
+    text-shadow: 0 0 10px #ffcc00;
+}
+.mission-card.completed .mission-card-number {
+    color: #00cc66;
+    text-shadow: 0 0 10px #00cc66;
+}
+.mission-card-planet {
+    font-size: 40px;
+    margin-bottom: 10px;
+}
+.mission-card.locked .mission-card-planet {
+    filter: grayscale(1);
+    opacity: 0.5;
+}
+.mission-card-name {
+    font-size: 14px;
+    color: #aaa;
+    text-align: center;
+    padding: 0 10px;
+}
+.mission-card:not(.locked) .mission-card-name {
+    color: #fff;
+}
+.mission-card-status {
+    position: absolute;
+    bottom: 10px;
+    font-size: 11px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.mission-card.completed .mission-card-status {
+    color: #00cc66;
+}
+.mission-card.locked .mission-card-status {
+    color: #666;
+}
+.menu-footer {
+    position: absolute;
+    bottom: 30px;
+    color: #555;
+    font-size: 14px;
+}
+.menu-rocket {
+    position: absolute;
+    bottom: 100px;
+    right: 50px;
+    font-size: 60px;
+    animation: rocketBob 2s ease-in-out infinite;
+}
+@keyframes rocketBob {
+    0%, 100% { transform: translateY(0) rotate(-45deg); }
+    50% { transform: translateY(-20px) rotate(-45deg); }
+}
+
+/* ========== MISSION 1 HUD ========== */
+#mission1-hud {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px;
+    box-sizing: border-box;
+}
+.m1-top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+}
+.m1-menu-btn {
+    background: rgba(60, 60, 60, 0.9);
+    border: 2px solid #888;
+    border-radius: 10px;
+    padding: 10px 18px;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    pointer-events: auto;
+    transition: all 0.2s;
+}
+.m1-menu-btn:hover {
+    background: rgba(100, 100, 100, 0.95);
+    border-color: #aaa;
+}
+.m1-money-box {
+    background: rgba(0, 80, 0, 0.85);
+    border: 3px solid #00ff00;
+    border-radius: 15px;
+    padding: 15px 25px;
+    color: #00ff00;
+    font-size: 28px;
+    font-weight: bold;
+    text-shadow: 0 0 10px #00ff00;
+}
+.m1-money-box span {
+    color: #ffff00;
+}
+.m1-rocket-progress {
+    background: rgba(0, 0, 80, 0.85);
+    border: 3px solid #00ccff;
+    border-radius: 15px;
+    padding: 15px 20px;
+    color: white;
+    text-align: center;
+}
+.m1-rocket-title {
+    font-size: 18px;
+    color: #00ccff;
+    margin-bottom: 10px;
+}
+.m1-parts-grid {
+    display: flex;
+    gap: 10px;
+}
+.m1-part {
+    width: 50px;
+    height: 50px;
+    background: rgba(50, 50, 50, 0.8);
+    border: 2px solid #444;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    opacity: 0.4;
+}
+.m1-part.owned {
+    opacity: 1;
+    border-color: #00ff00;
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+}
+.m1-lemonade-stats {
+    background: rgba(255, 200, 0, 0.9);
+    border: 3px solid #ff9900;
+    border-radius: 15px;
+    padding: 12px 20px;
+    color: #333;
+    font-weight: bold;
+}
+.m1-bottom-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+.m1-controls {
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 10px;
+    padding: 10px 15px;
+    color: #aaa;
+    font-size: 14px;
+}
+.m1-controls .key {
+    background: #444;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid #888;
+}
+
+/* Mission 1 Tooltip */
+.m1-tooltip {
+    position: absolute;
+    bottom: 150px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.85);
+    border: 2px solid #ffcc00;
+    border-radius: 10px;
+    padding: 12px 24px;
+    color: white;
+    font-size: 18px;
+    text-align: center;
+    display: none;
+    pointer-events: none;
+    animation: tooltipPulse 1.5s ease-in-out infinite;
+}
+.m1-tooltip.show {
+    display: block;
+}
+.m1-tooltip .key {
+    background: #ffcc00;
+    color: #000;
+    padding: 3px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    margin: 0 3px;
+}
+@keyframes tooltipPulse {
+    0%, 100% { border-color: #ffcc00; box-shadow: 0 0 10px rgba(255, 204, 0, 0.3); }
+    50% { border-color: #ffaa00; box-shadow: 0 0 20px rgba(255, 204, 0, 0.6); }
+}
+
+/* Mission 1 Conversation Dialog */
+.m1-conversation-dialog {
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    border: 3px solid #fff;
+    border-radius: 20px;
+    padding: 20px 30px;
+    color: white;
+    min-width: 400px;
+    max-width: 600px;
+    display: none;
+    pointer-events: auto;
+}
+.m1-conversation-dialog.show {
+    display: block;
+}
+.m1-conv-name {
+    font-size: 22px;
+    font-weight: bold;
+    color: #ffcc00;
+    margin-bottom: 10px;
+}
+.m1-conv-text {
+    font-size: 18px;
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+.m1-conv-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.m1-conv-option {
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #333 0%, #222 100%);
+    border: 2px solid #555;
+    border-radius: 10px;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+}
+.m1-conv-option:hover {
+    background: linear-gradient(135deg, #444 0%, #333 100%);
+    border-color: #ffcc00;
+    transform: translateX(5px);
+}
+.m1-conv-option.mow {
+    border-color: #00cc00;
+}
+.m1-conv-option.mow:hover {
+    border-color: #00ff00;
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+}
+.m1-conv-option.lemonade {
+    border-color: #ffaa00;
+}
+.m1-conv-option.lemonade:hover {
+    border-color: #ffcc00;
+    box-shadow: 0 0 10px rgba(255, 200, 0, 0.3);
+}
+.m1-conv-option .price {
+    float: right;
+    color: #00ff00;
+    font-weight: bold;
+}
+
+/* Mission 1 Interaction Prompt */
+.m1-interaction-prompt {
+    position: absolute;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    border: 2px solid #ffcc00;
+    border-radius: 15px;
+    padding: 15px 30px;
+    color: white;
+    font-size: 18px;
+    text-align: center;
+    display: none;
+    pointer-events: auto;
+}
+.m1-interaction-prompt.show {
+    display: block;
+}
+.m1-prompt-title {
+    color: #ffcc00;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+.m1-prompt-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 15px;
+}
+.m1-prompt-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.m1-prompt-btn:hover {
+    transform: scale(1.05);
+}
+.m1-prompt-btn.mow {
+    background: linear-gradient(135deg, #00cc00, #009900);
+    color: white;
+}
+.m1-prompt-btn.lemonade {
+    background: linear-gradient(135deg, #ffcc00, #ff9900);
+    color: #333;
+}
+.m1-prompt-btn.shop {
+    background: linear-gradient(135deg, #00ccff, #0099cc);
+    color: white;
+}
+.m1-prompt-btn.cancel {
+    background: #666;
+    color: white;
+}
+
+/* Mission 1 Notification */
+.m1-notification {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9);
+    border: 3px solid #00ff00;
+    border-radius: 20px;
+    padding: 20px 40px;
+    color: white;
+    font-size: 24px;
+    text-align: center;
+    display: none;
+    animation: notifyPop 0.3s ease-out;
+}
+@keyframes notifyPop {
+    from { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+    to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+/* Mission 1 Niam Dialog */
+.m1-niam-dialog {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9);
+    border: 3px solid #ffc832;
+    border-radius: 15px;
+    padding: 30px 40px;
+    color: white;
+    text-align: center;
+    display: none;
+    pointer-events: auto;
+    min-width: 400px;
+    animation: notifyPop 0.3s ease-out;
+}
+.m1-niam-dialog.show {
+    display: block;
+}
+.m1-niam-title {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+.m1-niam-subtitle {
+    font-size: 16px;
+    color: #ccc;
+    margin-bottom: 25px;
+}
+.m1-niam-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.m1-niam-btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.m1-niam-btn.play {
+    background: #b44040;
+    color: white;
+}
+.m1-niam-btn.play:hover {
+    background: #ff6464;
+}
+.m1-niam-btn.decline {
+    background: #3c8c3c;
+    color: white;
+}
+.m1-niam-btn.decline:hover {
+    background: #64b464;
+}
+
+/* Mission 1 Mommy Dialog */
+.m1-mommy-dialog {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9);
+    border: 3px solid #ff88cc;
+    border-radius: 15px;
+    padding: 30px 40px;
+    color: white;
+    text-align: center;
+    display: none;
+    pointer-events: auto;
+    min-width: 400px;
+    animation: notifyPop 0.3s ease-out;
+}
+.m1-mommy-dialog.show {
+    display: block;
+}
+.m1-mommy-title {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+.m1-mommy-subtitle {
+    font-size: 16px;
+    color: #ffaadd;
+    margin-bottom: 25px;
+}
+.m1-mommy-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.m1-mommy-btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.m1-mommy-btn.buy {
+    background: linear-gradient(135deg, #ff88cc, #ff44aa);
+    color: white;
+}
+.m1-mommy-btn.buy:hover {
+    background: linear-gradient(135deg, #ffaadd, #ff66bb);
+}
+.m1-mommy-btn.decline {
+    background: #666;
+    color: white;
+}
+.m1-mommy-btn.decline:hover {
+    background: #888;
+}
+
+/* Mission 1 Shop Panel */
+.m1-shop-panel {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(180deg, #1a1a3a 0%, #2a2a5a 100%);
+    border: 4px solid #00ccff;
+    border-radius: 20px;
+    padding: 30px;
+    color: white;
+    display: none;
+    pointer-events: auto;
+    min-width: 500px;
+}
+.m1-shop-title {
+    font-size: 32px;
+    color: #00ccff;
+    text-align: center;
+    margin-bottom: 20px;
+    text-shadow: 0 0 10px #00ccff;
+}
+.m1-shop-items {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.m1-shop-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid #444;
+    border-radius: 10px;
+    padding: 15px;
+}
+.m1-shop-item.owned {
+    border-color: #00ff00;
+    background: rgba(0, 100, 0, 0.3);
+}
+.m1-shop-item-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.m1-shop-item-icon {
+    font-size: 40px;
+}
+.m1-shop-item-name {
+    font-size: 20px;
+    font-weight: bold;
+}
+.m1-shop-item-desc {
+    font-size: 12px;
+    color: #aaa;
+}
+.m1-shop-item-price {
+    font-size: 24px;
+    color: #00ff00;
+    font-weight: bold;
+}
+.m1-shop-item-btn {
+    padding: 10px 25px;
+    background: linear-gradient(135deg, #00cc00, #009900);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+.m1-shop-item-btn:disabled {
+    background: #444;
+    cursor: not-allowed;
+}
+.m1-shop-item-btn.purchased {
+    background: #333;
+}
+.m1-shop-close {
+    margin-top: 20px;
+    width: 100%;
+    padding: 15px;
+    background: #cc0000;
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Mission 1 Intro */
+#mission1-intro {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(135deg, #1a2a1a 0%, #2a3a2a 50%, #1a3a2a 100%);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+#mission1-cutscene {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: transparent;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding-bottom: 80px;
+    z-index: 999;
+    pointer-events: auto;
+}
+.m1-cutscene-scene { display: none; }
+.m1-grass { display: none; }
+.m1-house {
+    position: absolute;
+    bottom: 100px;
+    width: 120px;
+    height: 100px;
+    background: linear-gradient(180deg, #DEB887 0%, #D2B48C 100%);
+    border: 3px solid #8B4513;
+}
+.m1-house::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    left: -10px;
+    width: 0;
+    height: 0;
+    border-left: 70px solid transparent;
+    border-right: 70px solid transparent;
+    border-bottom: 60px solid #8B0000;
+}
+.m1-house-door {
+    position: absolute;
+    bottom: 0;
+    left: 45px;
+    width: 30px;
+    height: 50px;
+    background: #8B4513;
+    border: 2px solid #654321;
+}
+.m1-house-window {
+    position: absolute;
+    top: 20px;
+    width: 25px;
+    height: 25px;
+    background: #87CEEB;
+    border: 3px solid #fff;
+}
+.m1-sun {
+    position: absolute;
+    top: 30px;
+    right: 50px;
+    width: 60px;
+    height: 60px;
+    background: #FFD700;
+    border-radius: 50%;
+    box-shadow: 0 0 30px #FFD700, 0 0 60px #FFA500;
+}
+.m1-cloud {
+    position: absolute;
+    background: white;
+    border-radius: 50px;
+}
+
+/* Mission 1 Victory */
+#mission1-victory {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(180deg, #0a0a2a 0%, #1a1a4a 100%);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1001;
+}
+
+/* ========== MISSION 2 STYLES ========== */
+
+/* Mission 2 Intro */
+#mission2-intro {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(135deg, #0a1a2a 0%, #1a2a4a 50%, #0a2a3a 100%);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+/* Mission 2 Cutscene */
+#mission2-cutscene {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: transparent;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding-bottom: 80px;
+    z-index: 999;
+    pointer-events: auto;
+}
+
+/* Mission 2 HUD */
+#mission2-hud {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.m2-top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.m2-journey-box {
+    background: rgba(0, 50, 100, 0.85);
+    border: 3px solid #aaccff;
+    border-radius: 15px;
+    padding: 15px 25px;
+    min-width: 300px;
+}
+
+.m2-journey-label {
+    color: #aaccff;
+    font-size: 16px;
+    font-weight: bold;
+    text-shadow: 0 0 10px #aaccff;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.m2-journey-progress {
+    width: 100%;
+    height: 20px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid #aaccff;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+#m2-journey-bar {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #4488ff, #88ccff);
+    transition: width 0.3s;
+    box-shadow: 0 0 10px #88ccff;
+}
+
+.m2-status-box {
+    background: rgba(0, 0, 0, 0.85);
+    border: 3px solid #666;
+    border-radius: 15px;
+    padding: 15px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.m2-stat {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.m2-stat-label {
+    color: #aaa;
+    font-size: 14px;
+    width: 100px;
+}
+
+.m2-bar-container {
+    width: 150px;
+    height: 16px;
+    background: rgba(50, 50, 50, 0.8);
+    border: 2px solid #444;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.m2-bar {
+    height: 100%;
+    transition: width 0.2s;
+}
+
+.m2-bar.ship {
+    width: 100%;
+    background: linear-gradient(90deg, #ff4444, #44ff44);
+}
+
+.m2-bar.stress {
+    width: 0%;
+    background: linear-gradient(90deg, #44ff44, #ffff44, #ff4444);
+}
+
+.m2-bottom-bar {
+    display: flex;
+    justify-content: center;
+}
+
+.m2-controls {
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 10px;
+    padding: 10px 20px;
+    color: #aaa;
+    font-size: 14px;
+}
+
+.m2-controls .key {
+    background: #444;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid #888;
+}
+
+/* Mission 2 Tooltip */
+.m2-tooltip {
+    position: absolute;
+    bottom: 120px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.85);
+    border: 2px solid #aaccff;
+    border-radius: 10px;
+    padding: 12px 24px;
+    color: white;
+    font-size: 18px;
+    text-align: center;
+    display: none;
+    pointer-events: none;
+}
+
+.m2-tooltip.show {
+    display: block;
+}
+
+.m2-tooltip .key {
+    background: #aaccff;
+    color: #000;
+    padding: 3px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    margin: 0 3px;
+}
+
+/* Mission 2 Menu Button */
+.m2-menu-btn {
+    background: rgba(60, 60, 80, 0.9);
+    border: 2px solid #aaccff;
+    border-radius: 10px;
+    padding: 10px 18px;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    pointer-events: auto;
+    transition: all 0.2s;
+}
+.m2-menu-btn:hover {
+    background: rgba(80, 80, 120, 0.95);
+    border-color: #ccddff;
+}
+
+/* Mission 2 Victory */
+#mission2-victory {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(180deg, #0a0a2a 0%, #1a1a4a 100%);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1001;
+}
