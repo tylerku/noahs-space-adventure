@@ -176,15 +176,49 @@ export function hidePrompt() {
 // ============ SHOP UI ============
 
 /**
- * Render shop items
+ * Render shop items - both computer parts and rocket parts
  */
-export function renderShopItems(rocketParts, money, onBuy) {
+export function renderShopItems(rocketParts, money, computerParts, rocketPartsUnlocked) {
     const items = getElement('m1-shop-items');
     if (!items) return;
 
-    let html = '';
+    let html = '<div class="m1-shop-columns">';
+
+    // Rocket Parts Column (left)
+    const rocketLocked = !rocketPartsUnlocked;
+    html += `<div class="m1-shop-column">
+        <div class="m1-shop-section ${rocketLocked ? 'locked' : ''}">
+        <div class="m1-shop-section-title">🚀 Rocket Parts ${rocketLocked ? '<span class="lock-msg">🔒 INT 8</span>' : ''}</div>`;
+
     for (const key in rocketParts) {
         const part = rocketParts[key];
+        const canBuy = money >= part.price && !part.owned && !rocketLocked;
+        const owned = part.owned;
+
+        html += `
+            <div class="m1-shop-item ${owned ? 'owned' : ''} ${rocketLocked ? 'locked' : ''}">
+                <div class="m1-shop-item-info">
+                    <div class="m1-shop-item-icon">${part.icon}</div>
+                    <div>
+                        <div class="m1-shop-item-name">${part.name}</div>
+                        <div class="m1-shop-item-desc">${part.desc}</div>
+                    </div>
+                </div>
+                <div class="m1-shop-item-price">$${part.price}</div>
+                <button class="m1-shop-item-btn ${owned ? 'purchased' : ''}"
+                        ${canBuy ? '' : 'disabled'}
+                        onclick="window.buyPart && window.buyPart('${key}')">
+                    ${owned ? '\u2713 Owned' : rocketLocked ? '🔒' : 'Buy'}
+                </button>
+            </div>
+        `;
+    }
+    html += '</div></div>';
+
+    // Computer Parts Column (right)
+    html += '<div class="m1-shop-column"><div class="m1-shop-section"><div class="m1-shop-section-title">💻 Computer Parts</div>';
+    for (const key in computerParts) {
+        const part = computerParts[key];
         const canBuy = money >= part.price && !part.owned;
         const owned = part.owned;
 
@@ -200,22 +234,26 @@ export function renderShopItems(rocketParts, money, onBuy) {
                 <div class="m1-shop-item-price">$${part.price}</div>
                 <button class="m1-shop-item-btn ${owned ? 'purchased' : ''}"
                         ${canBuy ? '' : 'disabled'}
-                        onclick="window.buyPart && window.buyPart('${key}')">
+                        onclick="window.buyComputerPart && window.buyComputerPart('${key}')">
                     ${owned ? '\u2713 Owned' : 'Buy'}
                 </button>
             </div>
         `;
     }
+    html += '</div></div>';
+
+    html += '</div>'; // Close m1-shop-columns
+
     items.innerHTML = html;
 }
 
 /**
  * Show shop panel
  */
-export function showShop(rocketParts, money) {
+export function showShop(rocketParts, money, computerParts, rocketPartsUnlocked) {
     const shop = getElement(UI_ELEMENTS.M1_SHOP);
     if (shop) {
-        renderShopItems(rocketParts, money);
+        renderShopItems(rocketParts, money, computerParts, rocketPartsUnlocked);
         shop.style.display = 'block';
     }
 }
@@ -233,26 +271,109 @@ export function hideShop() {
 // ============ HUD UPDATES ============
 
 /**
- * Update Mission 1 HUD
+ * Update Mission 1 HUD (legacy signature for compatibility)
  */
 export function updateM1HUD(money, lemonadeEarnings, customersWaiting, rocketParts) {
     const moneyEl = getElement(UI_ELEMENTS.M1_MONEY);
-    const earningsEl = getElement(UI_ELEMENTS.M1_LEMONADE_EARNINGS);
-    const customersEl = getElement(UI_ELEMENTS.M1_CUSTOMERS);
 
     if (moneyEl) moneyEl.textContent = money;
-    if (earningsEl) earningsEl.textContent = lemonadeEarnings;
-    if (customersEl) customersEl.textContent = customersWaiting;
+}
 
-    // Update rocket parts display
-    for (const key in rocketParts) {
-        const el = getElement('part-' + key);
-        if (el) {
-            if (rocketParts[key].owned) {
-                el.classList.add('owned');
-            } else {
-                el.classList.remove('owned');
-            }
+/**
+ * Update full Mission 1 HUD with all new elements
+ */
+export function updateM1FullHUD(state) {
+    // Money
+    const moneyEl = getElement(UI_ELEMENTS.M1_MONEY);
+    if (moneyEl) moneyEl.textContent = state.money;
+
+    // Time
+    const timeEl = getElement('m1-time');
+    const timeIconEl = getElement('m1-time-icon');
+    const dayEl = getElement('m1-day');
+    if (timeEl) timeEl.textContent = state.formattedTime;
+    if (dayEl) dayEl.textContent = state.dayNumber;
+    if (timeIconEl) {
+        // Sun/moon icon based on time
+        if (state.hour >= 20 || state.hour < 6) {
+            timeIconEl.textContent = '🌙';
+        } else if (state.hour >= 18) {
+            timeIconEl.textContent = '🌅';
+        } else if (state.hour >= 6 && state.hour < 8) {
+            timeIconEl.textContent = '🌄';
+        } else {
+            timeIconEl.textContent = '☀️';
+        }
+    }
+
+    // Stats
+    const staminaLevelEl = getElement('m1-stamina-level');
+    const staminaXpEl = getElement('m1-stamina-xp');
+    const intelLevelEl = getElement('m1-intel-level');
+    const intelXpEl = getElement('m1-intel-xp');
+
+    if (staminaLevelEl) staminaLevelEl.textContent = state.staminaLevel;
+    if (intelLevelEl) intelLevelEl.textContent = state.intelligenceLevel;
+
+    // XP bars (percentage)
+    if (staminaXpEl) staminaXpEl.style.width = `${state.staminaXpPercent}%`;
+    if (intelXpEl) intelXpEl.style.width = `${state.intelligenceXpPercent}%`;
+
+    // XP text (current/needed)
+    const staminaXpTextEl = getElement('m1-stamina-xp-text');
+    const intelXpTextEl = getElement('m1-intel-xp-text');
+    if (staminaXpTextEl) {
+        if (state.staminaLevel >= 10) {
+            staminaXpTextEl.textContent = 'MAX';
+        } else {
+            staminaXpTextEl.textContent = `${state.staminaXp}/${state.staminaXpNeeded}`;
+        }
+    }
+    if (intelXpTextEl) {
+        if (state.intelligenceLevel >= 10) {
+            intelXpTextEl.textContent = 'MAX';
+        } else {
+            intelXpTextEl.textContent = `${state.intelligenceXp}/${state.intelligenceXpNeeded}`;
+        }
+    }
+
+    // Computer progress
+    const computerProgressEl = getElement('m1-computer-progress');
+    if (computerProgressEl) {
+        computerProgressEl.textContent = `${state.computerPartsOwned}/9`;
+    }
+
+    // Rocket progress
+    const rocketProgressEl = getElement('m1-rocket-progress');
+    const rocketLockedEl = getElement('m1-rocket-locked');
+    const rocketStatusEl = getElement('m1-rocket-status');
+
+    if (rocketProgressEl) {
+        if (state.rocketAssembled) {
+            rocketProgressEl.textContent = 'READY!';
+        } else {
+            rocketProgressEl.textContent = `${state.rocketPartsOwned}/5`;
+        }
+    }
+    if (rocketLockedEl) {
+        if (state.rocketPartsUnlocked) {
+            rocketLockedEl.style.display = 'none';
+        } else {
+            rocketLockedEl.style.display = 'inline';
+        }
+    }
+    if (rocketStatusEl) {
+        if (state.readyToLaunch) {
+            rocketStatusEl.textContent = '🚀 LAUNCH READY!';
+            rocketStatusEl.style.color = '#00ff00';
+        } else if (state.rocketAssembled) {
+            rocketStatusEl.textContent = 'Training needed...';
+            rocketStatusEl.style.color = '#ffcc00';
+        } else if (state.rocketPartsOwned === 5) {
+            rocketStatusEl.textContent = 'Assemble in street!';
+            rocketStatusEl.style.color = '#00ccff';
+        } else {
+            rocketStatusEl.textContent = '';
         }
     }
 }

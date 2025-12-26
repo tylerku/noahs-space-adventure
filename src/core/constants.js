@@ -2,6 +2,120 @@
  * Game Constants - All magic numbers and configuration values
  */
 
+// ============ TIME SYSTEM ============
+export const TIME = {
+    SUNRISE_HOUR: 6,
+    SUNSET_HOUR: 20,          // 8 PM
+    MINUTES_PER_ACTIVITY: {
+        MOWING: 60,            // 1 hour
+        READING: 240,          // 4 hours
+        TUTORING: 120,         // 2 hours
+        RUNNING_LAP: 180,      // 3 hours per lap
+        CODING: 120,           // 2 hours
+        HOUSE_FLIPPING: 720,   // 12 hours (must start early!)
+        ROCKET_ASSEMBLY: 120,  // 2 hours
+    },
+};
+
+// ============ STATS SYSTEM ============
+export const STATS = {
+    MAX_LEVEL: 10,
+    // XP required to reach each level (index 0 = level 2, etc.)
+    XP_PER_LEVEL: [50, 75, 100, 150, 200, 275, 350, 450, 550],
+
+    STAMINA: {
+        XP_PER_LAP: 50,
+        SPEED_BONUS_PER_LEVEL: 0.5,  // +0.5 speed per level
+    },
+
+    INTELLIGENCE: {
+        XP_READING: 25,
+        XP_TUTORING: 200,
+        XP_CODING: 15,
+        XP_HOUSE_FLIP: 150,
+        UNLOCK_HOUSE_FLIP: 3,
+        UNLOCK_CODING: 4,
+        UNLOCK_ROCKET_PARTS: 8,
+    },
+};
+
+// ============ COMPUTER PARTS ============
+export const COMPUTER_PARTS = {
+    monitor: { price: 30, name: "Monitor", icon: "🖥️", desc: "See your code!" },
+    tower: { price: 35, name: "Tower", icon: "🗄️", desc: "The computer brain box" },
+    keyboard: { price: 20, name: "Keyboard", icon: "⌨️", desc: "Type your code" },
+    mouse: { price: 15, name: "Mouse", icon: "🖱️", desc: "Click and drag" },
+    desk: { price: 40, name: "Desk", icon: "🪑", desc: "A place to work" },
+    motherboard: { price: 35, name: "Motherboard", icon: "🔧", desc: "Connects everything" },
+    ram: { price: 30, name: "RAM", icon: "💾", desc: "Fast memory" },
+    gpu: { price: 25, name: "GPU", icon: "🎮", desc: "Graphics power!" },
+    cpu: { price: 20, name: "CPU", icon: "🧠", desc: "The thinking chip" },
+};
+
+// ============ LOCATIONS ============
+export const LOCATIONS = {
+    LIBRARY: {
+        X: -270,  // West side of the perpendicular road
+        Z: -100,  // In front of houses (south of main road)
+        INTERACT_DIST: 60,
+        READING_COST: 0,
+        TUTORING_COST: 25,
+    },
+    RUNNING_TRACK: {
+        X: -350,   // West of the perpendicular road, not overlapping
+        Z: -280,   // At the end of the library road
+        INTERACT_DIST: 80,
+        LAP_RADIUS: 80,
+    },
+    DAD: {
+        X: 130,         // Right side of the car (opposite from Mommy)
+        Z: 40,          // South side of the road
+        INTERACT_DIST: 50,
+    },
+    SEDAN: {
+        X: 70,
+        Z: 30,          // South side of the road
+    },
+};
+
+// ============ HOUSE FLIPPING ============
+export const HOUSE_FLIPPING = {
+    SUCCESS_RATE: 0.8,        // 80% success
+    PROFIT_MIN: 20,
+    PROFIT_MAX: 100,
+    LOSS_MIN: 10,
+    LOSS_MAX: 50,
+};
+
+// ============ CODING ============
+export const CODING = {
+    PAY_MIN: 25,
+    PAY_MAX: 50,
+    MIN_INTELLIGENCE: 4,
+};
+
+// ============ CODING JOBS ============
+export const JOBS = {
+    TIME_REQUIRED: 480,     // 8 hours per job
+    XP_REWARD: 15,          // INT XP per job
+    MIN_INTELLIGENCE: 4,    // Required INT level to take jobs
+};
+
+// ============ CRYPTO ============
+export const CRYPTO = {
+    SPACECOIN: {
+        START_PRICE: 100,
+        VOLATILITY: 0.15,     // 15% daily swing
+        TREND_UP: 0.02,       // 2% upward bias
+    },
+    DOGECOIN: {
+        START_PRICE: 10,
+        VOLATILITY: 0.40,     // 40% daily swing
+        TREND_DOWN: -0.05,    // 5% downward bias
+        MOON_CHANCE: 0.05,    // 5% chance to 5x
+    },
+};
+
 // ============ GAME SETTINGS ============
 export const GAME = {
     REPAIR_SPEED: 0.06,           // How fast the rocket repairs
@@ -41,12 +155,12 @@ export const CAMERA = {
 
 // ============ MISSION 1 SETTINGS ============
 export const MISSION1 = {
-    // Map bounds (expanded for wider house spacing)
+    // Map bounds (extended for library and running track)
     BOUNDS: {
         MIN_X: -500,
-        MAX_X: 500,
-        MIN_Z: -350,
-        MAX_Z: 450,
+        MAX_X: 600,   // Reduced since track moved left
+        MIN_Z: -380,  // Extended south for running track at end of library road
+        MAX_Z: 500,
     },
 
     // Lemonade stand (at far left end of road)
@@ -57,9 +171,9 @@ export const MISSION1 = {
         DRINK_TIME: 180,  // frames
     },
 
-    // Rocket shop (moved right for wider layout)
+    // Rocket shop (far right, away from houses)
     ROCKET_SHOP: {
-        X: 420,
+        X: 520,
         Z: 100,
     },
 
@@ -91,8 +205,8 @@ export const MISSION1 = {
 
     // Mommy (sells lemonade materials)
     MOMMY: {
-        X: 0,           // Same X as Noah's house
-        Z: 160,         // In front of the house
+        X: -50,         // To the left of Noah's house
+        Z: 40,          // South side of the road
         INTERACT_DIST: 50,
         MATERIALS_COST: 10,
         MATERIALS_AMOUNT: 7,  // 7-8 lemonades worth (we'll randomize to 7 or 8)
@@ -113,13 +227,13 @@ export const MISSION1 = {
     STAND_INTERACT_DIST: 60,
 };
 
-// ============ ROCKET PARTS ============
+// ============ ROCKET PARTS ($500 total, locked until INT 8) ============
 export const ROCKET_PARTS = {
-    engine: { price: 50, name: "Engine", icon: "\uD83D\uDD25", desc: "Powers the rocket!" },
-    body: { price: 40, name: "Body", icon: "\uD83D\uDEE2\uFE0F", desc: "Main rocket structure" },
-    nose: { price: 30, name: "Nose Cone", icon: "\uD83D\uDD3A", desc: "Aerodynamic tip" },
-    fins: { price: 25, name: "Fins", icon: "\uD83D\uDD27", desc: "Stabilize flight" },
-    seat: { price: 35, name: "Captain's Seat", icon: "\uD83D\uDCBA", desc: "A comfy seat for Noah" },
+    engine: { price: 140, name: "Engine", icon: "🔥", desc: "Powers the rocket!" },
+    body: { price: 110, name: "Body", icon: "🛢️", desc: "Main rocket structure" },
+    nose: { price: 85, name: "Nose Cone", icon: "🔺", desc: "Aerodynamic tip" },
+    fins: { price: 70, name: "Fins", icon: "🔧", desc: "Stabilize flight" },
+    seat: { price: 95, name: "Captain's Seat", icon: "💺", desc: "A comfy seat for Noah" },
 };
 
 // ============ NEIGHBOR CONFIGS ============
@@ -259,7 +373,7 @@ export const TERRAIN = {
     PEBBLES_MAX_DIST: 900,
 
     M1_TREES_COUNT: 12,
-    M1_FLOWERS_COUNT: 40,
+    M1_FLOWERS_COUNT: 20,
 };
 
 // ============ UI ELEMENT IDS ============
@@ -286,6 +400,7 @@ export const UI_ELEMENTS = {
     M1_NOTIFICATION: 'm1-notification',
     M1_SHOP: 'm1-shop',
     M1_PROMPT: 'm1-prompt',
+    M1_SLEEP_OVERLAY: 'm1-sleep-overlay',
 
     // Mission 2
     M2_INTRO: 'mission2-intro',
@@ -306,6 +421,7 @@ export const GAME_STATES = {
     M1_INTRO: 'm1_intro',
     M1_CUTSCENE: 'm1_cutscene',
     M1_PLAYING: 'm1_playing',
+    M1_SLEEP: 'm1_sleep',
     M1_WON: 'm1_won',
     M2_INTRO: 'm2_intro',
     M2_CUTSCENE: 'm2_cutscene',

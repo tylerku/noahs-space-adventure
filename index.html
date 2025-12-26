@@ -46,33 +46,25 @@
         </div>
 
         <h1 class="game-title">NOAH'S SPACE ADVENTURE</h1>
-        <p class="game-subtitle">Select a Mission</p>
+        <p class="game-subtitle">Help Noah build a rocket and go to space!</p>
 
-        <div class="missions-container">
-            <div class="mission-card" data-mission="1" onclick="startMission(1)">
-                <div class="mission-card-planet">🏠</div>
-                <div class="mission-card-number">1</div>
-                <div class="mission-card-name">Belle Pond Avenue</div>
-                <div class="mission-card-status">Build Your Rocket</div>
-            </div>
+        <div class="menu-buttons">
+            <button class="menu-btn primary" id="continue-game-btn" disabled>
+                <span class="btn-icon">⏳</span>
+                <span class="btn-text">Loading...</span>
+            </button>
+            <button class="menu-btn secondary" id="new-game-btn" disabled>
+                <span class="btn-icon">⏳</span>
+                <span class="btn-text">Loading...</span>
+            </button>
+        </div>
 
-            <div class="mission-card" data-mission="2" onclick="startMission(2)">
-                <div class="mission-card-planet">🌙</div>
-                <div class="mission-card-number">2</div>
-                <div class="mission-card-name">Moon Base</div>
-                <div class="mission-card-status">Survive the Journey</div>
-            </div>
-
-            <div class="mission-card" data-mission="3" onclick="startMission(3)">
-                <div class="mission-card-planet">🔴</div>
-                <div class="mission-card-number">3</div>
-                <div class="mission-card-name">Mars Defense</div>
-                <div class="mission-card-status">Save Hannah & James</div>
-            </div>
+        <div class="menu-record">
+            <div class="record-label">Best Time Record</div>
+            <div class="record-value" id="menu-best-days">No record yet</div>
         </div>
 
         <div class="menu-rocket">🚀</div>
-        <div class="menu-footer">Press a mission card to start</div>
     </div>
 
     <!-- ========== MISSION INTRO (Mission 3) ========== -->
@@ -235,26 +227,48 @@
     <div id="mission1-hud">
         <div class="m1-top-bar">
             <button class="m1-menu-btn" onclick="returnToMenu()">☰ Menu</button>
+            <div class="m1-time-box">
+                <span id="m1-time-icon">☀️</span>
+                <span id="m1-time">6:00 AM</span>
+                <span class="m1-day">Day <span id="m1-day">1</span></span>
+            </div>
             <div class="m1-money-box">💰 $<span id="m1-money">0</span></div>
-            <div class="m1-rocket-progress">
-                <div class="m1-rocket-title">🚀 Rocket Parts</div>
-                <div class="m1-parts-grid">
-                    <div class="m1-part" id="part-engine" title="Engine">🔥</div>
-                    <div class="m1-part" id="part-body" title="Body">🛢️</div>
-                    <div class="m1-part" id="part-nose" title="Nose Cone">🔺</div>
-                    <div class="m1-part" id="part-fins" title="Fins">🔧</div>
-                    <div class="m1-part" id="part-seat" title="Seat">💺</div>
+            <div class="m1-stats-box">
+                <div class="m1-stat-row">
+                    <span class="m1-stat-label">🏃 Stamina</span>
+                    <span class="m1-stat-level">Lv.<span id="m1-stamina-level">1</span></span>
+                    <div class="m1-xp-bar-container">
+                        <div id="m1-stamina-xp" class="m1-xp-bar stamina"></div>
+                    </div>
+                    <span class="m1-xp-text" id="m1-stamina-xp-text">0/50</span>
+                </div>
+                <div class="m1-stat-row">
+                    <span class="m1-stat-label">🧠 Intelligence</span>
+                    <span class="m1-stat-level">Lv.<span id="m1-intel-level">1</span></span>
+                    <div class="m1-xp-bar-container">
+                        <div id="m1-intel-xp" class="m1-xp-bar intel"></div>
+                    </div>
+                    <span class="m1-xp-text" id="m1-intel-xp-text">0/50</span>
                 </div>
             </div>
-            <div class="m1-lemonade-stats">
-                🍋 Lemonade: $<span id="m1-lemonade-earnings">0</span> |
-                Customers: <span id="m1-customers">0</span>
+            <div class="m1-progress-box">
+                <div class="m1-progress-row">
+                    <span>💻 Computer</span>
+                    <span id="m1-computer-progress">0/9</span>
+                </div>
+                <div class="m1-progress-row">
+                    <span>🚀 Rocket</span>
+                    <span id="m1-rocket-progress">0/5</span>
+                    <span id="m1-rocket-locked" class="m1-locked">(INT 8)</span>
+                </div>
+                <div id="m1-rocket-status" class="m1-rocket-status"></div>
             </div>
         </div>
         <div class="m1-bottom-bar">
             <div class="m1-controls">
                 <span class="key">WASD</span> Move | <span class="key">E</span> Interact
             </div>
+            <button class="m1-new-game-btn" onclick="confirmNewGame()">New Game</button>
         </div>
     </div>
 
@@ -295,24 +309,280 @@
     </div>
 
     <div id="m1-shop" class="m1-shop-panel">
-        <div class="m1-shop-title">🚀 Rocket Shop</div>
+        <div class="m1-shop-title">🏪 Belle Pond Tech Shop</div>
         <div id="m1-shop-items" class="m1-shop-items"></div>
         <button class="m1-shop-close" onclick="closeShop()">Close</button>
     </div>
 
+    <!-- Library Dialog -->
+    <div id="m1-library-dialog" class="m1-library-dialog">
+        <div class="m1-library-title">📚 Belle Pond Library</div>
+        <div class="m1-library-subtitle">"Knowledge is the key to the stars!"</div>
+        <div class="m1-library-options">
+            <button class="m1-library-btn read" onclick="libraryRead()">
+                <span class="btn-title">📖 Read Books</span>
+                <span class="btn-desc">Learn at your own pace</span>
+                <span class="btn-stats">FREE | +25 INT XP | 4 hours</span>
+            </button>
+            <button class="m1-library-btn tutor" onclick="libraryTutor()">
+                <span class="btn-title">👨‍🏫 Hire a Tutor</span>
+                <span class="btn-desc">Accelerated learning!</span>
+                <span class="btn-stats">$25 | +200 INT XP | 2 hours</span>
+            </button>
+            <button class="m1-library-btn close" onclick="closeLibrary()">Leave Library</button>
+        </div>
+    </div>
+
+    <!-- Library Interior HUD -->
+    <div id="m1-library-interior-hud" class="m1-library-interior-hud">
+    </div>
+
+    <!-- Library Tutor Dialog -->
+    <div id="m1-tutor-dialog" class="m1-tutor-dialog">
+        <div class="m1-tutor-title">👨‍🏫 Hire a Tutor?</div>
+        <div class="m1-tutor-info">
+            <div class="tutor-cost">Cost: <span class="highlight">$25</span></div>
+            <div class="tutor-reward">Reward: <span class="highlight">+200 Intelligence XP</span></div>
+            <div class="tutor-time">Time: <span class="highlight">2 hours</span></div>
+        </div>
+        <div class="m1-tutor-desc">Get personalized tutoring to accelerate your learning!</div>
+        <div class="m1-tutor-buttons">
+            <button class="m1-tutor-btn confirm" onclick="confirmTutor()">Yes, Hire Tutor</button>
+            <button class="m1-tutor-btn cancel" onclick="closeTutorDialog()">No Thanks</button>
+        </div>
+    </div>
+
+    <!-- Library Reading Dialog -->
+    <div id="m1-reading-dialog" class="m1-tutor-dialog">
+        <div class="m1-tutor-title">📚 Study at the Library?</div>
+        <div class="m1-tutor-info">
+            <div class="tutor-cost">Cost: <span class="highlight free">FREE</span></div>
+            <div class="tutor-reward">Reward: <span class="highlight">+25 Intelligence XP</span></div>
+            <div class="tutor-time">Time: <span class="highlight">4 hours</span></div>
+        </div>
+        <div class="m1-tutor-desc">Spend time reading books to expand your knowledge!</div>
+        <div class="m1-tutor-buttons">
+            <button class="m1-tutor-btn confirm" onclick="confirmReading()">Yes, Study</button>
+            <button class="m1-tutor-btn cancel" onclick="closeReadingDialog()">No Thanks</button>
+        </div>
+    </div>
+
+    <!-- Build Computer Dialog -->
+    <div id="m1-build-computer-dialog" class="m1-tutor-dialog">
+        <div class="m1-tutor-title">🔧 Build Your Computer?</div>
+        <div class="m1-tutor-info">
+            <div class="tutor-cost">Parts: <span class="highlight">9/9 Ready!</span></div>
+            <div class="tutor-reward">Unlocks: <span class="highlight">Coding Jobs & Crypto</span></div>
+        </div>
+        <div class="m1-tutor-desc">All parts collected! Assemble them into a working computer to start earning money from coding jobs!</div>
+        <div class="m1-tutor-buttons">
+            <button class="m1-tutor-btn confirm" onclick="confirmBuildComputer()">🔧 Build It!</button>
+            <button class="m1-tutor-btn cancel" onclick="closeBuildComputerDialog()">Not Yet</button>
+        </div>
+    </div>
+
+    <!-- Running Track Dialog -->
+    <div id="m1-track-dialog" class="m1-track-dialog">
+        <div class="m1-track-title">🏃 Running Track</div>
+        <div class="m1-track-subtitle">"Push your limits!"</div>
+        <div class="m1-track-options">
+            <button class="m1-track-btn run" onclick="startRunning()">
+                <span class="btn-title">🏃‍♂️ Run Laps</span>
+                <span class="btn-desc">Build your stamina!</span>
+                <span class="btn-stats">+50 Stamina XP per lap | 30 min each</span>
+            </button>
+            <button class="m1-track-btn close" onclick="closeTrack()">Leave Track</button>
+        </div>
+    </div>
+
+    <!-- Dad House Flipping Dialog -->
+    <div id="m1-dad-dialog" class="m1-dad-dialog">
+        <div class="m1-dad-title">🏠 House Flipping with Dad</div>
+        <div class="m1-dad-subtitle" id="dad-dialog-subtitle">"Ready to learn about real estate, sport?"</div>
+        <div class="m1-dad-options" id="dad-dialog-options">
+            <button class="m1-dad-btn flip" onclick="dadFlipHouse()">
+                <span class="btn-title">🔨 Let's Flip a House!</span>
+                <span class="btn-desc">80% success rate</span>
+                <span class="btn-stats">+150 INT XP | 6 hours | Variable profit/loss</span>
+            </button>
+            <button class="m1-dad-btn close" onclick="closeDadDialog()">Maybe later, Dad</button>
+        </div>
+    </div>
+
+    <!-- Home Dialog -->
+    <div id="m1-home-dialog" class="m1-home-dialog">
+        <div class="m1-home-title">🏠 Noah's House</div>
+        <div class="m1-home-subtitle">"Home sweet home!"</div>
+        <div class="m1-home-options">
+            <button class="m1-home-btn computer" onclick="openComputerFromHome()" id="home-computer-btn">
+                <span class="btn-title">💻 Use Computer</span>
+                <span class="btn-desc">Coding jobs & crypto trading</span>
+                <span class="btn-lock" id="home-computer-lock">🔒 Build computer first (buy parts at shop)</span>
+            </button>
+            <button class="m1-home-btn sleep" onclick="goToSleepFromHome()" id="home-sleep-btn">
+                <span class="btn-title">😴 Go to Sleep</span>
+                <span class="btn-desc">Rest up for tomorrow!</span>
+                <span class="btn-lock" id="home-sleep-lock">Come back when it's getting dark</span>
+            </button>
+            <button class="m1-home-btn close" onclick="closeHome()">Leave House</button>
+        </div>
+    </div>
+
+    <!-- Computer Dialog -->
+    <div id="m1-computer-dialog" class="m1-computer-dialog">
+        <div class="m1-computer-title">💻 Noah's Computer</div>
+        <div class="m1-computer-subtitle">"Time to work on some projects!"</div>
+        <div class="m1-computer-options">
+            <button class="m1-computer-btn code" onclick="startCoding()" id="coding-btn">
+                <span class="btn-title">👨‍💻 Coding Jobs</span>
+                <span class="btn-desc">Write code for clients</span>
+                <span class="btn-stats">$25-50 | +15 INT XP | 2 hours</span>
+                <span class="btn-lock" id="coding-lock">🔒 Requires INT 4</span>
+            </button>
+            <button class="m1-computer-btn crypto" onclick="openCrypto()">
+                <span class="btn-title">📈 Crypto Trading</span>
+                <span class="btn-desc">Buy and sell digital coins!</span>
+                <span class="btn-stats">High risk, high reward!</span>
+            </button>
+            <button class="m1-computer-btn close" onclick="closeComputer()">Turn Off Computer</button>
+        </div>
+    </div>
+
+    <!-- Crypto Trading Dialog -->
+    <div id="m1-crypto-dialog" class="m1-crypto-dialog">
+        <div class="m1-crypto-title">📊 Crypto Exchange</div>
+        <div class="m1-crypto-balance">Balance: $<span id="crypto-balance">0</span></div>
+        <div class="m1-crypto-coins">
+            <div class="m1-crypto-coin">
+                <div class="coin-header">
+                    <span class="coin-icon">₿</span>
+                    <span class="coin-name">BitCoin</span>
+                </div>
+                <div class="coin-price">$<span id="spacecoin-price">100.00</span></div>
+                <div class="coin-owned">Owned: <span id="spacecoin-owned">0</span></div>
+                <div class="coin-trend" id="spacecoin-trend">Steady growth 📈</div>
+                <div class="coin-actions">
+                    <button class="coin-btn buy" onclick="buyCrypto('spacecoin')">Buy</button>
+                    <button class="coin-btn sell" onclick="sellCrypto('spacecoin')">Sell</button>
+                </div>
+            </div>
+            <div class="m1-crypto-coin">
+                <div class="coin-header">
+                    <span class="coin-icon">🐕</span>
+                    <span class="coin-name">DogeCoin</span>
+                </div>
+                <div class="coin-price">$<span id="dogecoin-price">10.00</span></div>
+                <div class="coin-owned">Owned: <span id="dogecoin-owned">0</span></div>
+                <div class="coin-trend" id="dogecoin-trend">Very volatile! 🎲</div>
+                <div class="coin-actions">
+                    <button class="coin-btn buy" onclick="buyCrypto('dogecoin')">Buy</button>
+                    <button class="coin-btn sell" onclick="sellCrypto('dogecoin')">Sell</button>
+                </div>
+            </div>
+        </div>
+        <div class="m1-crypto-tip">💡 Prices change each day! BitCoin is safer, DogeCoin might moon! 🌙</div>
+        <button class="m1-crypto-close" onclick="closeCrypto()">Close Exchange</button>
+    </div>
+
+    <!-- House Interior HUD -->
+    <div id="m1-house-interior-hud" class="m1-house-interior-hud">
+        <div class="house-interior-title">Noah's Room</div>
+        <div class="house-interior-instructions">
+            Click on <strong>bed</strong> to sleep | Click on <strong>computer</strong> to work | Click <strong>door</strong> or press <strong>ESC</strong> to exit
+        </div>
+    </div>
+
+    <!-- Computer Screen Overlay -->
+    <div id="computer-screen-overlay" class="computer-screen-overlay">
+        <div class="computer-monitor">
+            <div class="monitor-bezel">
+                <div class="monitor-screen">
+                    <!-- Main Menu -->
+                    <div class="computer-menu" id="computer-main-menu">
+                        <div class="computer-header">NoahOS v1.0</div>
+                        <div class="screen-stats">
+                            <div class="screen-stat">Cash: $<span id="screen-balance">0</span></div>
+                            <div class="screen-stat">Crypto Value: $<span id="screen-wallet">0</span></div>
+                        </div>
+                        <div class="computer-options">
+                            <button class="screen-btn jobs" onclick="openJobBrowser()">
+                                <span class="screen-icon">💼</span>
+                                <span>Coding Jobs</span>
+                            </button>
+                            <button class="screen-btn crypto" onclick="openScreenCrypto()">
+                                <span class="screen-icon">📈</span>
+                                <span>Crypto Trading</span>
+                            </button>
+                            <button class="screen-btn power-off" onclick="closeComputerScreen()">
+                                <span class="screen-icon">⏻</span>
+                                <span>Power Off</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Job Browser -->
+                    <div class="job-browser" id="job-browser" style="display: none;">
+                        <div class="job-browser-header">
+                            <span class="job-browser-title">💼 FreelanceHub</span>
+                            <span class="job-browser-subtitle">Find your next coding gig!</span>
+                        </div>
+                        <div class="job-listings" id="job-listings">
+                            <!-- Jobs will be rendered here -->
+                        </div>
+                        <button class="back-btn" onclick="showComputerMainMenu()">← Back to Desktop</button>
+                    </div>
+
+                    <!-- Crypto Trading Screen -->
+                    <div class="screen-crypto" id="screen-crypto" style="display: none;">
+                        <div class="screen-crypto-header">
+                            <span class="screen-crypto-title">📊 CryptoTrader</span>
+                            <span class="screen-crypto-balance">Balance: $<span id="screen-crypto-balance">0</span></span>
+                        </div>
+                        <div class="screen-crypto-coins">
+                            <div class="screen-coin">
+                                <div class="screen-coin-header">
+                                    <span class="screen-coin-icon">₿</span>
+                                    <span class="screen-coin-name">BitCoin</span>
+                                </div>
+                                <div class="screen-coin-price">$<span id="screen-spacecoin-price">100.00</span></div>
+                                <div class="screen-coin-owned">Owned: <span id="screen-spacecoin-owned">0</span></div>
+                                <div class="screen-coin-value">Value: $<span id="screen-spacecoin-value">0.00</span></div>
+                                <div class="screen-coin-actions">
+                                    <button class="screen-coin-btn buy" onclick="screenBuyCrypto('spaceCoin')">Buy $10</button>
+                                    <button class="screen-coin-btn sell" onclick="screenSellCrypto('spaceCoin')">Sell All</button>
+                                </div>
+                            </div>
+                            <div class="screen-coin">
+                                <div class="screen-coin-header">
+                                    <span class="screen-coin-icon">🐕</span>
+                                    <span class="screen-coin-name">DogeCoin</span>
+                                </div>
+                                <div class="screen-coin-price">$<span id="screen-dogecoin-price">10.00</span></div>
+                                <div class="screen-coin-owned">Owned: <span id="screen-dogecoin-owned">0</span></div>
+                                <div class="screen-coin-value">Value: $<span id="screen-dogecoin-value">0.00</span></div>
+                                <div class="screen-coin-actions">
+                                    <button class="screen-coin-btn buy" onclick="screenBuyCrypto('dogeCoin')">Buy $10</button>
+                                    <button class="screen-coin-btn sell" onclick="screenSellCrypto('dogeCoin')">Sell All</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="screen-crypto-tip">💡 Prices change each day!</div>
+                        <button class="back-btn" onclick="showComputerMainMenu()">← Back to Desktop</button>
+                    </div>
+                </div>
+            </div>
+            <div class="monitor-stand"></div>
+        </div>
+    </div>
+
     <!-- ========== MISSION 1 VICTORY ========== -->
     <div id="mission1-victory">
-        <div class="victory-scene" style="background: linear-gradient(180deg, #1a3a1a 0%, #2a5a2a 50%, #3a7a3a 100%); border-color: #00ff00;">
-            <div class="victory-title" style="color: #00ff00; text-shadow: 0 0 20px #00ff00;">ROCKET COMPLETE!</div>
-            <div class="victory-subtitle" style="top: 90px;">Time to save Hannah and James on Mars!</div>
+        <div class="victory-scene" style="background: linear-gradient(180deg, #0a1a3a 0%, #1a3a6a 50%, #2a5a9a 100%); border-color: #00ccff;">
+            <div class="victory-title" style="color: #00ccff; text-shadow: 0 0 20px #00ccff;">BLAST OFF! 🚀</div>
+            <div class="victory-subtitle" style="top: 90px;">Noah and his family are headed to MARS!</div>
 
-            <div style="position: absolute; bottom: 150px; left: 50%; transform: translateX(-50%); text-align: center;">
-                <div style="font-size: 120px; animation: rocketBob 1s ease-in-out infinite;">🚀</div>
-                <div style="color: #fff; font-size: 24px; margin-top: 20px;">All parts collected!</div>
-            </div>
-
-            <div style="position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 20px; justify-content: center;">
-                <button class="victory-btn" style="position: static; transform: none; opacity: 1;" onclick="returnToMenu()">Continue Adventure</button>
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                <button class="victory-btn" style="position: static; transform: none; opacity: 1; font-size: 28px; padding: 20px 40px;" onclick="returnToMenu()">The End... For Now!</button>
             </div>
         </div>
     </div>

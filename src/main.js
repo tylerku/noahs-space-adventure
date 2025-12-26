@@ -3,17 +3,35 @@
  * Modular p5.js game with Mission 1 (Neighborhood), Mission 2 (Space Flight), and Mission 3 (Mars Defense)
  */
 
-import { GAME_STATES, STORAGE, UI_ELEMENTS } from './core/constants.js';
+import { GAME_STATES, STORAGE, UI_ELEMENTS, JOBS } from './core/constants.js';
 import {
     gameState, noah, marsState, setGameState, getGameState,
-    resetGameState, mission1State, saveMission1Progress
+    resetGameState, mission1State, saveMission1Progress, clearMission1SaveData,
+    isNightTime, isGettingDark, isComputerBuilt, addMoney, addIntelligenceXP,
+    advanceTime, getIntelligenceLevel, allComputerPartsOwned, buildComputer, getOwnedPartsCount
 } from './core/state.js';
 import {
     initMission1, updateMission1, drawMission1Scene, drawMowingMiniGame,
     checkInteractions, startConversation, conversationMow, conversationLemonade,
-    endConversation, openRocketShop, closeRocketShop, buyPartAction,
-    showMommyConversation, buyLemonadeMaterials, closeMommyDialog
+    endConversation, openRocketShop, closeRocketShop, buyPartAction, buyComputerPart,
+    showMommyConversation, buyLemonadeMaterials, closeMommyDialog, goToSleep,
+    refreshHUD, openLibrary, closeLibrary, libraryRead, libraryTutor,
+    openTrack, closeTrack, startRunning, openDadDialog, closeDadDialog, dadFlipHouse,
+    openComputer, closeComputer, startCoding, openCrypto, closeCrypto, buyCrypto, sellCrypto,
+    assembleRocketAction, showRocketStatus, launchToMars,
+    openHome, closeHome, openComputerFromHome, goToSleepFromHome,
+    updateSleepCutscene, drawSleepCutscene
 } from './missions/mission1.js';
+import {
+    enterLibraryInterior, exitLibraryInterior, drawLibraryInterior,
+    handleLibraryClick, handleLibraryHover
+} from './missions/libraryInterior.js';
+import {
+    enterHouseInterior, exitHouseInterior, drawHouseInterior,
+    handleHouseClick, handleHouseHover, openComputerScreen, closeComputerScreen,
+    showComputerMainMenu, openJobBrowser, openScreenCrypto, updateScreenCryptoUI,
+    renderJobListings
+} from './missions/houseInterior.js';
 import {
     initMission2, updateMission2, drawMission2, drawM2Cutscene,
     mission2State, getM2Interaction, resetMission2State
@@ -25,11 +43,62 @@ import {
 import { resetPoolManager } from './utils/pools.js';
 import {
     showScreen, hideScreen, setOpacity, showMainMenu, showGameOver,
-    showVictory, showNotification, updateHealth, hidePrompt, updateM1HUD
+    showVictory, showNotification, updateHealth, hidePrompt
 } from './ui/dialogs.js';
 
 // ============ GLOBAL P5 INSTANCE ============
 let p5Instance = null;
+let isSetupComplete = false;
+
+// ============ MAIN MENU FUNCTIONS ============
+
+function continueGame() {
+    // Don't allow starting game before p5.js setup is complete
+    if (!isSetupComplete) return;
+
+    // Set state FIRST to prevent any Mars rendering during transition
+    setGameState(GAME_STATES.M1_PLAYING);
+    gameState.currentMission = 1;
+
+    hideScreen(UI_ELEMENTS.MAIN_MENU);
+    initMission1();  // This will load saved progress
+    showScreen(UI_ELEMENTS.M1_HUD);
+}
+
+function startNewGame() {
+    // Don't allow starting game before p5.js setup is complete
+    if (!isSetupComplete) return;
+
+    if (confirm('Start a new game? All progress will be lost!')) {
+        // Clear all saved progress
+        try {
+            localStorage.removeItem(STORAGE.PROGRESS_KEY);
+            clearMission1SaveData();  // Clear mission 1 specific save data
+        } catch (e) {
+            console.log('Could not clear progress');
+        }
+
+        // Set state FIRST to prevent any Mars rendering during transition
+        setGameState(GAME_STATES.M1_PLAYING);
+        gameState.currentMission = 1;
+
+        hideScreen(UI_ELEMENTS.MAIN_MENU);
+        initMission1();  // Will start fresh with no saved data
+        showScreen(UI_ELEMENTS.M1_HUD);
+        refreshHUD();
+    }
+}
+
+// Add event listeners for menu buttons (modules run after DOM is ready)
+const continueBtn = document.getElementById('continue-game-btn');
+const newGameBtn = document.getElementById('new-game-btn');
+
+if (continueBtn) {
+    continueBtn.addEventListener('click', continueGame);
+}
+if (newGameBtn) {
+    newGameBtn.addEventListener('click', startNewGame);
+}
 
 // ============ P5.JS SETUP ============
 
@@ -39,34 +108,112 @@ window.setup = function() {
     generateTerrain(window);
     p5Instance = window;
 
-    // Initialize UI
+    // Hide all screens initially
     hideScreen(UI_ELEMENTS.MISSION_INTRO);
     hideScreen(UI_ELEMENTS.M1_INTRO);
     hideScreen(UI_ELEMENTS.M1_CUTSCENE);
-    hideScreen(UI_ELEMENTS.M1_HUD);
     hideScreen(UI_ELEMENTS.M1_VICTORY);
     hideScreen(UI_ELEMENTS.M2_INTRO);
     hideScreen(UI_ELEMENTS.M2_CUTSCENE);
     hideScreen(UI_ELEMENTS.M2_HUD);
     hideScreen(UI_ELEMENTS.M2_VICTORY);
+    hideScreen(UI_ELEMENTS.M1_HUD);
     setOpacity(UI_ELEMENTS.UI_LAYER, '0');
 
-    updateMenuDisplay();
+    // Show main menu on startup
+    showScreen(UI_ELEMENTS.MAIN_MENU);
+    setGameState(GAME_STATES.MENU);
+    updateBestDaysDisplay();
+
+    // Mark setup as complete and enable menu buttons
+    isSetupComplete = true;
+    enableMenuButtons();
 };
+
+// ============ MENU BUTTON FUNCTIONS ============
+
+function enableMenuButtons() {
+    const continueBtn = document.getElementById('continue-game-btn');
+    const newGameBtn = document.getElementById('new-game-btn');
+
+    if (continueBtn) {
+        continueBtn.disabled = false;
+        continueBtn.querySelector('.btn-icon').textContent = '🚀';
+        continueBtn.querySelector('.btn-text').textContent = 'Continue Game';
+    }
+    if (newGameBtn) {
+        newGameBtn.disabled = false;
+        newGameBtn.querySelector('.btn-icon').textContent = '✨';
+        newGameBtn.querySelector('.btn-text').textContent = 'New Game';
+    }
+}
+
+// ============ BEST DAYS RECORD FUNCTIONS ============
+
+function updateBestDaysDisplay() {
+    const bestDays = getBestDays();
+    const display = document.getElementById('menu-best-days');
+    if (display) {
+        if (bestDays !== null) {
+            display.textContent = `${bestDays} day${bestDays === 1 ? '' : 's'}`;
+        } else {
+            display.textContent = 'No record yet';
+        }
+    }
+}
+
+function getBestDays() {
+    try {
+        const saved = localStorage.getItem('noahBestDays');
+        return saved ? parseInt(saved) : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+function saveBestDays(days) {
+    try {
+        const current = getBestDays();
+        if (current === null || days < current) {
+            localStorage.setItem('noahBestDays', days.toString());
+            return true;  // New record!
+        }
+        return false;
+    } catch (e) {
+        return false;
+    }
+}
 
 // ============ P5.JS DRAW LOOP ============
 
 window.draw = function() {
     const state = getGameState();
 
+    // Menu state - show black background (don't show Mars)
+    if (state === GAME_STATES.MENU) {
+        background(0, 0, 0);
+        return;
+    }
+
     // Mission 1
     if (state === GAME_STATES.M1_PLAYING) {
         updateMission1(window);
         if (mission1State.mowingMiniGame) {
             drawMowingMiniGame(window);
+        } else if (mission1State.library.isInside) {
+            drawLibraryInterior(window);
+        } else if (mission1State.house.isInside) {
+            drawHouseInterior(window);
         } else {
             drawMission1Scene(window);
         }
+        return;
+    }
+
+    // Mission 1 Sleep Cutscene
+    if (state === GAME_STATES.M1_SLEEP) {
+        updateSleepCutscene(window);
+        drawSleepCutscene(window);
         return;
     }
 
@@ -110,9 +257,9 @@ window.draw = function() {
         return;
     }
 
-    // Non-gameplay states
+    // Non-Mars states (M1_WON, M1_INTRO, M2_WON, M2_LOST, etc.) - show black background
     if (state !== GAME_STATES.PLAYING && state !== GAME_STATES.WON && state !== GAME_STATES.LOST) {
-        background(50, 20, 10);
+        background(0, 0, 0);
         return;
     }
 
@@ -125,9 +272,73 @@ window.draw = function() {
 window.mousePressed = function() {
     const state = getGameState();
 
+    // Library interior click handling
+    if (state === GAME_STATES.M1_PLAYING && mission1State.library.isInside) {
+        const result = handleLibraryClick(mouseX, mouseY, width, height);
+        if (result) {
+            switch (result.action) {
+                case 'tutor':
+                    showTutorDialog();
+                    break;
+                case 'read':
+                    showReadingDialog();
+                    break;
+                case 'exit':
+                    exitLibraryInterior();
+                    break;
+            }
+        }
+        return;
+    }
+
+    // House interior click handling
+    if (state === GAME_STATES.M1_PLAYING && mission1State.house.isInside) {
+        const result = handleHouseClick(mouseX, mouseY, width, height);
+        if (result) {
+            switch (result.action) {
+                case 'bed':
+                    attemptSleep();
+                    break;
+                case 'computer':
+                    attemptUseComputer();
+                    break;
+                case 'exit':
+                    exitHouseInterior();
+                    break;
+            }
+        }
+        return;
+    }
+
     // Shoot blaster
     if (state === GAME_STATES.PLAYING) {
         shootBlaster();
+    }
+};
+
+window.mouseMoved = function() {
+    const state = getGameState();
+
+    // Library interior hover handling
+    if (state === GAME_STATES.M1_PLAYING && mission1State.library.isInside) {
+        const hoveredObject = handleLibraryHover(mouseX, mouseY, width, height);
+        // Change cursor based on hover
+        if (hoveredObject) {
+            cursor('pointer');
+        } else {
+            cursor('default');
+        }
+    }
+
+    // House interior hover handling
+    if (state === GAME_STATES.M1_PLAYING && mission1State.house.isInside) {
+        const hoveredObject = handleHouseHover(mouseX, mouseY, width, height);
+        // Change cursor based on hover
+        if (hoveredObject) {
+            cursor('pointer');
+        } else {
+            cursor('default');
+        }
     }
 };
 
@@ -148,7 +359,27 @@ window.keyPressed = function() {
 
         // ESC to close
         if (keyCode === ESCAPE) {
-            if (mission1State.isShopOpen) {
+            // Check if computer screen is open first
+            const computerScreen = document.getElementById('computer-screen-overlay');
+            if (computerScreen && computerScreen.classList.contains('show')) {
+                closeComputerScreen();
+            }
+            // Check if tutor dialog is open
+            else if (document.getElementById('m1-tutor-dialog')?.classList.contains('show')) {
+                closeTutorDialog();
+            }
+            // Check if reading dialog is open
+            else if (document.getElementById('m1-reading-dialog')?.classList.contains('show')) {
+                closeReadingDialog();
+            }
+            // Check if build computer dialog is open
+            else if (document.getElementById('m1-build-computer-dialog')?.classList.contains('show')) {
+                closeBuildComputerDialog();
+            } else if (mission1State.house.isInside) {
+                exitHouseInterior();
+            } else if (mission1State.library.isInside) {
+                exitLibraryInterior();
+            } else if (mission1State.isShopOpen) {
                 closeRocketShop();
             } else if (mission1State.showingPrompt) {
                 hidePrompt();
@@ -176,7 +407,7 @@ function handleM1Interaction() {
                 `${interaction.data.name} won't answer... they're too annoyed!`, 2000);
             break;
         case 'shop':
-            showShopPrompt();
+            openRocketShop();
             break;
         case 'lemonade_stand':
             const count = mission1State.customersWaiting;
@@ -194,6 +425,59 @@ function handleM1Interaction() {
         case 'mommy':
             showMommyConversation();
             break;
+        case 'home':
+            enterHouseInterior();
+            break;
+        case 'library':
+            enterLibraryInterior();
+            break;
+        case 'running_track':
+            openTrack();
+            break;
+        case 'dad':
+            openDadDialog();
+            break;
+        case 'assemble_rocket':
+            assembleRocketAction();
+            break;
+        case 'rocket_status':
+            showRocketStatus();
+            break;
+        case 'launch':
+            triggerLaunchSequence();
+            break;
+        case 'rocket_progress':
+            showNotification(UI_ELEMENTS.M1_NOTIFICATION,
+                `🚀 Keep buying rocket parts at the Tech Shop!`, 2500);
+            break;
+        case 'launch_pad_empty':
+            showNotification(UI_ELEMENTS.M1_NOTIFICATION,
+                `🚀 This is where your rocket will launch! Buy parts at the Tech Shop.`, 3000);
+            break;
+        case 'closed':
+            showNotification(UI_ELEMENTS.M1_NOTIFICATION,
+                `🌙 ${interaction.tooltip}`, 2500);
+            break;
+    }
+}
+
+function triggerLaunchSequence() {
+    if (launchToMars()) {
+        // Show the victory screen after a short delay
+        setTimeout(() => {
+            setGameState(GAME_STATES.M1_WON);
+            hideScreen(UI_ELEMENTS.M1_HUD);
+            showScreen(UI_ELEMENTS.M1_VICTORY);
+            saveProgress(1);
+
+            // Save best days record
+            const days = mission1State.gameTime.dayNumber;
+            const isNewRecord = saveBestDays(days);
+            if (isNewRecord) {
+                showNotification(UI_ELEMENTS.M1_NOTIFICATION,
+                    `NEW RECORD! Completed in ${days} day${days === 1 ? '' : 's'}!`, 4000);
+            }
+        }, 2500);
     }
 }
 
@@ -258,14 +542,16 @@ window.returnToMenu = function() {
 
     // Hide mission-specific UI
     hideScreen(UI_ELEMENTS.M1_HUD);
+    hideScreen(UI_ELEMENTS.M1_VICTORY);
     hideScreen(UI_ELEMENTS.M2_HUD);
+    hideScreen(UI_ELEMENTS.M2_VICTORY);
     const m2Tooltip = document.getElementById(UI_ELEMENTS.M2_TOOLTIP);
     if (m2Tooltip) m2Tooltip.classList.remove('show');
     const niamDialog = document.getElementById('m1-niam-dialog');
     if (niamDialog) niamDialog.classList.remove('show');
 
     showMainMenu();
-    updateMenuDisplay();
+    updateBestDaysDisplay();
 };
 
 // ============ MISSION MANAGEMENT ============
@@ -365,8 +651,8 @@ function showShopPrompt() {
     const text = document.getElementById('m1-prompt-text');
     const buttons = document.getElementById('m1-prompt-buttons');
 
-    if (title) title.textContent = "\uD83D\uDE80 Rocket Shop";
-    if (text) text.textContent = "Welcome to the Rocket Shop! Want to buy some parts?";
+    if (title) title.textContent = "🛒 Tech Shop";
+    if (text) text.textContent = "Welcome to the Tech Shop! Want to buy some parts?";
     if (buttons) {
         buttons.innerHTML = `
             <button class="m1-prompt-btn shop" onclick="openShop()">Open Shop</button>
@@ -387,17 +673,10 @@ window.openShop = function() {
 window.closeShop = closeRocketShop;
 
 window.buyPart = function(partKey) {
-    if (buyPartAction(partKey)) {
-        // Victory!
-        setTimeout(() => {
-            closeRocketShop();
-            setGameState(GAME_STATES.M1_WON);
-            hideScreen(UI_ELEMENTS.M1_HUD);
-            showScreen(UI_ELEMENTS.M1_VICTORY);
-            saveProgress(1);
-        }, 1000);
-    }
+    buyPartAction(partKey);
 };
+
+window.buyComputerPart = buyComputerPart;
 
 window.conversationMow = conversationMow;
 window.conversationLemonade = conversationLemonade;
@@ -417,7 +696,7 @@ window.niamPlay = function() {
     mission1State.niam.lastApproachTime = frameCount;
     const niamDialog = document.getElementById('m1-niam-dialog');
     if (niamDialog) niamDialog.classList.remove('show');
-    updateM1HUD(mission1State.money, mission1State.lemonadeEarnings, mission1State.customersWaiting, mission1State.rocketParts);
+    refreshHUD();
     showNotification(UI_ELEMENTS.M1_NOTIFICATION, "You played with Niam! (-$5)", 2000);
 };
 
@@ -437,6 +716,243 @@ window.buyMaterials = function() {
 window.closeMommyDialog = function() {
     closeMommyDialog();
 };
+
+// Library dialog handlers
+window.libraryRead = libraryRead;
+window.libraryTutor = libraryTutor;
+window.closeLibrary = closeLibrary;
+
+// Library interior tutor dialog
+function showTutorDialog() {
+    // Tutor goes home after 6 PM
+    if (mission1State.gameTime.hour >= 18) {
+        showNotification(UI_ELEMENTS.M1_NOTIFICATION,
+            "The tutor has gone home for the day. Come back before 6 PM!", 2500);
+        return;
+    }
+    const dialog = document.getElementById('m1-tutor-dialog');
+    if (dialog) dialog.classList.add('show');
+}
+
+function closeTutorDialog() {
+    const dialog = document.getElementById('m1-tutor-dialog');
+    if (dialog) dialog.classList.remove('show');
+}
+
+function confirmTutor() {
+    closeTutorDialog();
+    libraryTutor();
+}
+
+window.showTutorDialog = showTutorDialog;
+window.closeTutorDialog = closeTutorDialog;
+window.confirmTutor = confirmTutor;
+
+// Reading dialog handlers
+function showReadingDialog() {
+    const dialog = document.getElementById('m1-reading-dialog');
+    if (dialog) dialog.classList.add('show');
+}
+
+function closeReadingDialog() {
+    const dialog = document.getElementById('m1-reading-dialog');
+    if (dialog) dialog.classList.remove('show');
+}
+
+function confirmReading() {
+    closeReadingDialog();
+    libraryRead();
+    exitLibraryInterior();  // Exit the interior view after reading
+}
+
+window.showReadingDialog = showReadingDialog;
+window.closeReadingDialog = closeReadingDialog;
+window.confirmReading = confirmReading;
+
+// Running track dialog handlers
+window.startRunning = startRunning;
+window.closeTrack = closeTrack;
+
+// Dad dialog handlers
+window.dadFlipHouse = dadFlipHouse;
+window.closeDadDialog = closeDadDialog;
+
+// Computer dialog handlers
+window.openComputer = openComputer;
+window.closeComputer = closeComputer;
+window.startCoding = startCoding;
+
+// Crypto dialog handlers
+window.openCrypto = openCrypto;
+window.closeCrypto = closeCrypto;
+window.buyCrypto = buyCrypto;
+window.sellCrypto = sellCrypto;
+
+// Home dialog handlers
+window.openHome = openHome;
+window.closeHome = closeHome;
+window.openComputerFromHome = openComputerFromHome;
+window.goToSleepFromHome = goToSleepFromHome;
+
+// House interior helpers
+function attemptSleep() {
+    if (!isNightTime() && !isGettingDark()) {
+        showNotification(UI_ELEMENTS.M1_NOTIFICATION,
+            "It's not time for bed yet! Come back when it's getting dark.", 2500);
+        return;
+    }
+    exitHouseInterior();
+    goToSleep();
+}
+
+function attemptUseComputer() {
+    if (!isComputerBuilt()) {
+        if (allComputerPartsOwned()) {
+            // All parts ready - show build dialog
+            showBuildComputerDialog();
+        } else {
+            // Still need more parts
+            const partsOwned = getOwnedPartsCount();
+            showNotification(UI_ELEMENTS.M1_NOTIFICATION,
+                `Computer parts: ${partsOwned}/9. Buy more at the shop!`, 3000);
+        }
+        return;
+    }
+    openComputerScreen();
+}
+
+function showBuildComputerDialog() {
+    const dialog = document.getElementById('m1-build-computer-dialog');
+    if (dialog) dialog.classList.add('show');
+}
+
+function closeBuildComputerDialog() {
+    const dialog = document.getElementById('m1-build-computer-dialog');
+    if (dialog) dialog.classList.remove('show');
+}
+
+function confirmBuildComputer() {
+    closeBuildComputerDialog();
+    if (buildComputer()) {
+        showNotification(UI_ELEMENTS.M1_NOTIFICATION,
+            "🎉 Computer built! You can now take coding jobs!", 3500);
+        // Open computer screen after a short delay
+        setTimeout(() => openComputerScreen(), 500);
+    }
+}
+
+window.closeBuildComputerDialog = closeBuildComputerDialog;
+window.confirmBuildComputer = confirmBuildComputer;
+
+// Computer screen handlers
+window.openJobBrowser = openJobBrowser;
+window.openScreenCrypto = openScreenCrypto;
+window.showComputerMainMenu = showComputerMainMenu;
+window.closeComputerScreen = closeComputerScreen;
+
+// Accept a job from the job browser
+window.acceptJob = function(jobId) {
+    const m1 = mission1State;
+    const job = m1.codingJobs.find(j => j.id === jobId);
+    if (!job) return;
+
+    // Check INT requirement
+    if (getIntelligenceLevel() < JOBS.MIN_INTELLIGENCE) {
+        showNotification(UI_ELEMENTS.M1_NOTIFICATION,
+            `Need Intelligence level ${JOBS.MIN_INTELLIGENCE} to take coding jobs!`, 2500);
+        return;
+    }
+
+    // Complete the job
+    closeComputerScreen();
+    exitHouseInterior();
+    addMoney(job.pay);
+    addIntelligenceXP(JOBS.XP_REWARD);
+    const isNight = advanceTime(JOBS.TIME_REQUIRED);
+
+    showNotification(UI_ELEMENTS.M1_NOTIFICATION,
+        `Completed "${job.title}" - Earned $${job.pay}!`, 3000);
+
+    // Check if night triggered sleep
+    if (isNight) {
+        setTimeout(() => goToSleep(), 1500);
+    }
+
+    refreshHUD();
+};
+
+// Screen crypto buy/sell handlers
+window.screenBuyCrypto = function(coinType) {
+    const amount = 10;  // Buy $10 worth
+    if (mission1State.money < amount) {
+        showNotification(UI_ELEMENTS.M1_NOTIFICATION, "Not enough money! Need $10.", 2000);
+        return;
+    }
+
+    // Buy $10 worth of the coin (fractional)
+    const coinKey = coinType === 'spaceCoin' ? 'spaceCoin' : 'dogeCoin';
+    const crypto = mission1State.crypto[coinKey];
+    const coinsBought = amount / crypto.price;
+
+    mission1State.money -= amount;
+    crypto.owned += coinsBought;
+
+    const coinName = coinType === 'spaceCoin' ? '₿ BitCoin' : '🐕 DogeCoin';
+    showNotification(UI_ELEMENTS.M1_NOTIFICATION,
+        `Bought ${coinsBought.toFixed(4)} ${coinName} for $${amount}!`, 1500);
+
+    saveMission1Progress();
+    updateScreenCryptoUI();
+    refreshHUD();
+};
+
+window.screenSellCrypto = function(coinType) {
+    // Sell all of this coin type
+    const coinKey = coinType === 'spaceCoin' ? 'spaceCoin' : 'dogeCoin';
+    const crypto = mission1State.crypto[coinKey];
+
+    if (crypto.owned <= 0) {
+        const coinName = coinType === 'spaceCoin' ? 'BitCoin' : 'DogeCoin';
+        showNotification(UI_ELEMENTS.M1_NOTIFICATION,
+            `You don't own any ${coinName}!`, 2000);
+        return;
+    }
+
+    const saleValue = Math.floor(crypto.owned * crypto.price);
+    const coinsSold = crypto.owned;
+
+    mission1State.money += saleValue;
+    crypto.owned = 0;
+
+    const coinName = coinType === 'spaceCoin' ? '₿ BitCoin' : '🐕 DogeCoin';
+    showNotification(UI_ELEMENTS.M1_NOTIFICATION,
+        `Sold ${coinsSold.toFixed(4)} ${coinName} for $${saleValue}!`, 1500);
+
+    saveMission1Progress();
+    updateScreenCryptoUI();
+    refreshHUD();
+};
+
+// New Game handler
+window.confirmNewGame = function() {
+    if (confirm('Start a new game? All progress will be lost!')) {
+        startNewGameAction();
+    }
+};
+
+function startNewGameAction() {
+    // Clear all saved progress
+    try {
+        localStorage.removeItem(STORAGE.PROGRESS_KEY);
+        clearMission1SaveData();  // Clear mission 1 specific save data
+    } catch (e) {
+        console.log('Could not clear progress');
+    }
+
+    // Reset and reinitialize
+    initMission1();
+    refreshHUD();
+}
 
 // ============ PROGRESS MANAGEMENT ============
 
